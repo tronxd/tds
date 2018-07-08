@@ -1,0 +1,61 @@
+{
+  "gpus" : 1 ,
+  "mode":"development",
+  "preprocessing":
+  {
+    "feature_names" : ["I", "Q"],
+    "feature_range" : [-1,1],
+    "use_whitening" : false,
+    "rnn":
+    {
+     "series_offset" : 16
+    },
+    "ae":
+    {
+      "rbw_set" : [125e3],
+      "feature_names":["P"] ,
+      "use_noise":false
+    }
+  },
+  "learning":
+  {
+    "rnn": {
+      "models_dir": "model/rnn",
+      "num_epochs": 1,
+      "batch_size": 512,
+      "lr": 0.001,
+      "validation_split": 0.1,
+      "num_clusters": 16,
+      "cov_types": [
+        "diag",
+        "spherical"
+      ],
+      "seq_input_length": 32,
+      "seq_output_length": 16,
+      "input_padding": "post",
+      "output_padding": "pre"
+    },
+    "ae":
+    {
+      "models_dir": "model/ae",
+      "num_epochs":100,
+      "batch_size":32,
+      "lr":0.001,
+      "validation_split":0.1,
+      "block_length":128
+    }
+  },
+  "detection":
+  {
+    "rnn":
+    {
+      "scores_sample_size":256,
+    "sigma":20.0
+    },
+    "ae":
+    {
+      "sigma":5.0
+    }
+
+  }
+}

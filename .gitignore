@@ -1,0 +1,8 @@
+.idea
+.ipynb_checkpoints
+.git
+zca/
+model/
+.*hdf5
+__pycache__/
+iq_data/
