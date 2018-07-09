@@ -12,6 +12,7 @@ from zca.zca import ZCA
 from skimage.util import view_as_blocks
 from scipy.fftpack import fft,fftshift
 from scipy.signal import get_window
+from scipy.signal import spectrogram
 conf=get_config()
 gpus = conf['gpus']
 use_noise=conf['preprocessing']['ae']['use_noise']
@@ -228,6 +229,21 @@ def whiten_test_data(data,zca_path):
     return whitened_data
 
 
+def iq2fft_manually(data,sample_rate,rbw):
+    data = samples2complex(data)
+    # data = remove_dc(data)
+
+    num_samples = len(data)
+    acq_time = 1/rbw
+    slice_size = int(sample_rate * acq_time)
+    num_slices = int(num_samples / slice_size)
+    data = trim_by_slice_length(data, slice_size)
+    data_split = np.array_split(data, num_slices)
+    window = get_window('blackmanharris', slice_size)
+    fft_data = [complex2power(fftshift(fft(window*part))) for part in data_split]
+    fft_data = fft_to_matrix(fft_data)
+    return fft_data
+
 def iq2fft(data,sample_rate,rbw):
     data = samples2complex(data)
     # data = remove_dc(data)
@@ -238,10 +254,14 @@ def iq2fft(data,sample_rate,rbw):
     num_slices = int(num_samples / slice_size)
     data = trim_by_slice_length(data, slice_size)
     data_split = np.array_split(data, num_slices)
-    fft_data = [complex2power(fftshift(fft(get_window('blackmanharris',len(part))*part))) for part in data_split]
+    window = get_window('blackmanharris', slice_size)
 
-    fft_data = fft_to_matrix(fft_data)
-    return fft_data
+    freqs, time, fft_d = spectrogram(data, fs=sample_rate, window=window, return_onesided=False, nperseg=slice_size,
+                                         noverlap=3*slice_size//4, mode='complex')
+    fft_d = complex2power(fftshift(fft_d)).T
+    mid_freq_ind = int(np.ceil(len(freqs) / 2.0))
+    freqs = np.concatenate([freqs[mid_freq_ind:], freqs[:mid_freq_ind]])
+    return fft_d
 
 # Assume X is a 4D block tensor of the spectogram
 def stitch_blocks_to_spectogram(X):
