@@ -261,7 +261,7 @@ def iq2fft(data,sample_rate,rbw):
     fft_d = complex2power(fftshift(fft_d)).T
     mid_freq_ind = int(np.ceil(len(freqs) / 2.0))
     freqs = np.concatenate([freqs[mid_freq_ind:], freqs[:mid_freq_ind]])
-    return fft_d
+    return freqs, time, fft_d
 
 # Assume X is a 4D block tensor of the spectogram
 def stitch_blocks_to_spectogram(X):
@@ -316,7 +316,7 @@ def load_fft_train_data(train_data_dir , rbw,weights_dir):
 
     sample_rate = get_xhdr_sample_rate(train_data_dir)
 
-    fft_train = iq2fft(train_data,sample_rate,rbw)
+    _, _, fft_train = iq2fft(train_data,sample_rate,rbw)
 
     (fft_train, _) = scale_train_vectors(fft_train, scaler_path,rng=feature_range)
     return fft_train
@@ -330,7 +330,7 @@ def load_fft_test_data(test_data_dir , rbw,weights_dir):
         test_data = whiten_test_data(test_data,whiten_path)
 
     sample_rate = get_xhdr_sample_rate(test_data_dir)
-    fft_test = iq2fft(test_data,sample_rate,rbw)
+    _, _, fft_test = iq2fft(test_data,sample_rate,rbw)
     fft_test_scaled = scale_test_vectors(fft_test , scaler_path)
     return fft_test_scaled
 
