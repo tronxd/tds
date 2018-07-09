@@ -45,16 +45,14 @@ def detect_emd_anomalies_median(val_emds,test_emds,sigma=sigma_rnn):
     print("Val Median: {:.2}, Std.D: {:.2}  ||  val Sigma threshold: {:.2}, Threshold: {:.2}".format(val_median,val_std
                                                                                                      ,sigma,threshold))
 
-def detect_reconstruction_anomalies_median(errors,sigma=sigma_ae):
-    error_median = np.median(errors)
-    error_std = np.std(errors)
+def detect_reconstruction_anomalies_median(errors, error_median, error_std, sigma=sigma_ae):
 
     threshold = error_median + error_std * sigma
     anomalies_indices, = np.where(errors > threshold)
     return list(anomalies_indices)
 
 
-def plot_spectogram_anomalies(X , errors,weights_dir):
+def plot_spectogram_anomalies(X , anomalies_indices,weights_dir):
     plot_path = os.path.join(weights_dir,"spectogram_anomalies.png")
     X = np.squeeze(X,axis=-1)
     fig , ax = plt.subplots(1)
@@ -62,7 +60,7 @@ def plot_spectogram_anomalies(X , errors,weights_dir):
     orig_height , orig_width = X_spectogram.shape
     ax.imshow(X_spectogram,aspect='auto')
     (block_height,block_width) = X.shape[1:3]
-    for error_ind in errors:
+    for error_ind in anomalies_indices:
         x_cord = (error_ind * block_width) % orig_width
         y_cord = int(error_ind * block_width / orig_width) * block_height
         rect = patches.Rectangle((x_cord,y_cord - block_height),block_width,block_height,facecolor='none',edgecolor='r',linewidth=0.1,fill='none')

@@ -20,6 +20,7 @@ feature_names = conf['preprocessing']['ae']['feature_names']
 use_whitening=conf['preprocessing']['use_whitening']
 series_offset=conf['preprocessing']['rnn']['series_offset']
 feature_range = conf['preprocessing']['feature_range']
+fft_window_name = conf['preprocessing']['ae']['window']
 mode = conf['mode']
 assert mode in ['development','production']
 if mode == 'production':
@@ -30,7 +31,7 @@ import matplotlib.pyplot as plt
 
 def persist_object(obj, path):
     joblib.dump(obj, path)
-    print("saving to:" + path)
+    print("savin g to:" + path)
 
 def load_object(path):
     return joblib.load(path)
@@ -239,7 +240,7 @@ def iq2fft_manually(data,sample_rate,rbw):
     num_slices = int(num_samples / slice_size)
     data = trim_by_slice_length(data, slice_size)
     data_split = np.array_split(data, num_slices)
-    window = get_window('blackmanharris', slice_size)
+    window = get_window(fft_window_name, slice_size)
     fft_data = [complex2power(fftshift(fft(window*part))) for part in data_split]
     fft_data = fft_to_matrix(fft_data)
     return fft_data
@@ -269,7 +270,7 @@ def stitch_blocks_to_spectogram(X):
     block_height , block_width = X.shape[1:3]
     num_blocks = X.shape[0]
     orig_height = X.shape[1]**2
-    orig_width = (X.shape[2]**2) + block_width
+    orig_width = (X.shape[2]**2) # + block_width
     stitched_image = np.zeros((orig_height,orig_width))
 
     i = 0
@@ -304,6 +305,21 @@ def load_iq_train_data(train_data_dir , weights_dir):
     #Transform data to [-1 - 1] range
     (train_data, _) = scale_train_vectors(train_data, scaler_path,rng=feature_range)
     return train_data
+
+
+def persist_val_stat(val_errors, weights_dir):
+    val_errors_path = os.path.join(weights_dir, "val_errors.pkl")
+    persist_object(val_errors, val_errors_path)
+    val_median_std_path = os.path.join(weights_dir, "val_median_std.pkl")
+    error_median = np.median(val_errors)
+    error_std = np.std(val_errors)
+    val_dic = {'median': error_median, 'std': error_std}
+    persist_object(val_dic, val_median_std_path)
+
+def load_val_stat(weights_dir):
+    val_median_std_path = os.path.join(weights_dir, "val_median_std.pkl")
+    val_dic = load_object(val_median_std_path)
+    return val_dic['median'], val_dic['std']
 
 
 
