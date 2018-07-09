@@ -68,10 +68,10 @@ def train_model(model_obj, X_train, Y_train, X_val, Y_val ,train_params):
 
     if model_obj.gpus <= 1:
         history = model_obj.model.fit(X_train, Y_train, epochs=num_epochs, batch_size=batch_size * gpus,
-                            validation_data=(X_val, Y_val), shuffle=False, callbacks=[early_stop,checkpointer])
+                            validation_data=(X_val, Y_val), shuffle=False, callbacks=[early_stop,checkpointer], verbose=2)
     else:
         history = model_obj.gpu_model.fit(X_train, Y_train, epochs=num_epochs, batch_size=batch_size * gpus,
-                            validation_data=(X_val, Y_val), shuffle=False, callbacks=[early_stop])
+                            validation_data=(X_val, Y_val), shuffle=False, callbacks=[early_stop], verbose=2)
 
 
     model_obj.save_weights()
