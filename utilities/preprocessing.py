@@ -16,7 +16,6 @@ from scipy.signal import spectrogram
 conf=get_config()
 gpus = conf['gpus']
 use_noise=conf['preprocessing']['ae']['use_noise']
-feature_names = conf['preprocessing']['ae']['feature_names']
 use_whitening=conf['preprocessing']['use_whitening']
 series_offset=conf['preprocessing']['rnn']['series_offset']
 feature_range = conf['preprocessing']['feature_range']
@@ -316,8 +315,8 @@ def load_fft_train_data(train_data_dir , rbw,weights_dir):
 
     sample_rate = get_xhdr_sample_rate(train_data_dir)
 
-    fft_train = iq2fft(train_data,sample_rate,rbw)
-
+    # fft_train = iq2fft(train_data,sample_rate,rbw)
+    fft_train = iq2fft_manually(train_data, sample_rate, rbw)
     (fft_train, _) = scale_train_vectors(fft_train, scaler_path,rng=feature_range)
     return fft_train
 

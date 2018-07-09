@@ -19,9 +19,9 @@ models_dir = conf['learning']['rnn']['models_dir']
 class RnnModel(BaseModel):
     def __init__(self, train_params, weights_dir , gpus):
         super(RnnModel ,self).__init__(train_params,gpus)
-        self.weights_dir = os.path.join(models_dir, weights_dir)
-        if not os.path.exists(self.weights_dir):
-            os.mkdir(self.weights_dir)
+        self.weights_path = os.path.join(models_dir, weights_dir)
+        if not os.path.exists(self.weights_path):
+            os.mkdir(self.weights_path)
 
     def build_model(self,input_shape,opt,loss_fn):
         self.model = get_vannila_rnn_model()
@@ -34,9 +34,9 @@ class RnnModel(BaseModel):
                 self.gpu_model.compile(optimizer=opt, loss=loss_fn)
 
 
-def get_lstm_model(loss_fn):
+def get_lstm_model(input_shape):
     model = Sequential()
-    model.add(LSTM(seq_pad_length,input_shape = (inp_shape[1], inp_shape[2]),return_sequences=True,name='lstm1'))
+    model.add(LSTM(seq_pad_length,input_shape = (input_shape[1], input_shape[2]),return_sequences=True,name='lstm1'))
 #     model.add(Dropout(0.5))
     model.add(LSTM(seq_pad_length,return_sequences=True,name='lstm2'))
 #     model.add(Dropout(0.5))
@@ -55,9 +55,9 @@ def get_lstm_model(loss_fn):
     return model
 
 
-def get_big_model(loss_fn):
+def get_big_model(input_shape):
     model = Sequential()
-    model.add(LSTM(seq_pad_length, input_shape=(inp_shape[1], inp_shape[2]), return_sequences=True, name='lstm1'))
+    model.add(LSTM(seq_pad_length, input_shape=(input_shape[1], input_shape[2]), return_sequences=True, name='lstm1'))
     #     model.add(Dropout(0.5))
     model.add(LSTM(4*seq_pad_length, return_sequences=True, name='lstm2'))
     model.add(LSTM(4*seq_pad_length, return_sequences=True, name='lstm3'))

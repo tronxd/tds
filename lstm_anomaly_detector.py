@@ -49,8 +49,9 @@ batch_size=conf['learning']['rnn']['batch_size']
 num_clusters=conf['learning']['rnn']['num_clusters']
 validation_split=conf['learning']['rnn']['validation_split']
 lr=conf['learning']['rnn']['lr']
-feature_names_rnn = conf['preprocessing']['feature_names']
+feature_names_rnn = conf['preprocessing']['rnn']['feature_names']
 train_params = conf['learning']['rnn']
+feature_names = conf['preprocessing']['rnn']['feature_names']
 
 data_dir = namespace.data_dir
 seq_pad_length = seq_input_length + seq_output_length
@@ -90,9 +91,10 @@ def scale_error_vectors(errors,weights_dir):
 
 #loading,whitening,scaling
 if train:
-    train_data = load_iq_train_data(data_dir,weights_dir)
+
+    train_data = load_iq_train_data(data_dir, model_obj.weights_path)
     # # Create the output sequences
-    train_data = series_to_supervised(train_data, n_in=seq_input_length, n_out=seq_output_length)
+    train_data = series_to_supervised(train_data,feature_names=feature_names, n_in=seq_input_length, n_out=seq_output_length)
     # # Trim the data to fit the sequence length (SEQ_LENGTH)
     train_data = trim_by_seq_length(train_data, seq_input_length)
     (X_train, Y_train) = get_X_and_Y_columns(train_data)
