@@ -9,7 +9,7 @@
     "rnn":
     {
       "feature_names" : ["I", "Q"],
-     "series_offset" : 16
+      "series_offset" : 16
     },
     "ae":
     {

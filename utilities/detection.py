@@ -4,9 +4,13 @@ __author__ = 's5806074'
 import numpy as np
 import os
 import pyemd
-from utilities.preprocessing import stitch_blocks_to_spectogram
+from utilities.preprocessing import stitch_blocks_to_spectogram ,load_fft_test_data,  reshape_to_blocks, load_val_stat, load_object
 from utilities.config_handler import get_config
 import matplotlib.patches as patches
+from base.ae_model import AeModel
+from utilities.learning import predict_ae_error_vectors
+
+
 import math
 
 conf=get_config()
@@ -46,19 +50,19 @@ def detect_emd_anomalies_median(val_emds,test_emds,sigma=sigma_rnn):
                                                                                                      ,sigma,threshold))
 
 def detect_reconstruction_anomalies_median(errors, error_median, error_std, sigma=sigma_ae):
-
     threshold = error_median + error_std * sigma
-    anomalies_indices, = np.where(errors > threshold)
-    return list(anomalies_indices)
+    return errors > threshold
 
 
-def plot_spectogram_anomalies(X , anomalies_indices,weights_dir):
+def plot_spectogram_anomalies(X , anomalies_indices, freqs, time, weights_dir):
     plot_path = os.path.join(weights_dir,"spectogram_anomalies.png")
     X = np.squeeze(X,axis=-1)
     fig , ax = plt.subplots(1)
     X_spectogram = stitch_blocks_to_spectogram(X)
     orig_height , orig_width = X_spectogram.shape
-    ax.imshow(X_spectogram,aspect='auto')
+    plt.sca(ax)
+    # plt.imshow(X_spectogram, aspect='auto', origin='lower', extent=[freqs[0], freqs[-1], time[0], time[-1]])
+    plt.imshow(X_spectogram, aspect='auto', origin='lower')
     (block_height,block_width) = X.shape[1:3]
     for error_ind in anomalies_indices:
         x_cord = (error_ind * block_width) % orig_width
@@ -66,3 +70,41 @@ def plot_spectogram_anomalies(X , anomalies_indices,weights_dir):
         rect = patches.Rectangle((x_cord,y_cord - block_height),block_width,block_height,facecolor='none',edgecolor='r',linewidth=0.1,fill='none')
         ax.add_patch(rect)
     plt.savefig(plot_path,dpi=2000,aspect='auto')
+
+
+def predict_by_ae(data_dir, model_weights_dir):
+    gpus = conf['gpus']
+    train_params = conf['learning']['ae']
+    batch_size = conf['learning']['ae']['batch_size']
+    rbw_set = conf['preprocessing']['ae']['rbw_set']
+
+    found_anomaly_per_rbw = []
+    for rbw in rbw_set:
+        print('loading data and geting spectrogram...')
+        freqs, time, data_spectro = load_fft_test_data(data_dir, rbw, model_weights_dir)
+
+        print('spliting to block and predicting AutoEncoders errors...')
+        block_shape = load_object(os.path.join(model_weights_dir, 'block_shape.pkl'))
+        block_indices, data_blocks = reshape_to_blocks(data_spectro, block_shape)
+        conv_model = AeModel(train_params, model_weights_dir, gpus, direct=True)
+        conv_model.build_model(data_blocks.shape[1:])
+        conv_model.load_weights()
+        data_ae_errors = predict_ae_error_vectors(data_blocks, data_blocks, conv_model, batch_size)
+
+        print('declaring anomaly block...')
+        error_median, error_std = load_val_stat(model_weights_dir)
+        anomalies_indices = detect_reconstruction_anomalies_median(data_ae_errors, error_median, error_std)
+
+        print('voting between blocks...')
+        has_anomaly = voting_anomalies(anomalies_indices, block_indices, time, freqs)
+
+        found_anomaly_per_rbw.append(has_anomaly)
+    print('finished!')
+
+    return any(found_anomaly_per_rbw)
+
+def voting_anomalies(anomalies_indices, block_indices, time, freqs):
+    per_freq_anomaly_percent = np.sum(anomalies_indices, axis=0) / anomalies_indices.shape[0]
+    print(np.sum(anomalies_indices))
+    max_percent = np.max(per_freq_anomaly_percent)
+    return max_percent>0.2

@@ -12,27 +12,31 @@ conf=get_config()
 
 models_dir = conf['learning']['ae']['models_dir']
 class AeModel(BaseModel):
-    def __init__(self, train_params, weights_dir,gpus):
+    def __init__(self, train_params, weights_dir,gpus, direct=False):
         super(AeModel ,self).__init__(train_params,gpus)
-        self.weights_path = os.path.join(models_dir, weights_dir)
+        if direct:
+            self.weights_path = weights_dir
+        else:
+            self.weights_path = os.path.join(models_dir, weights_dir)
         if not os.path.exists(self.weights_path):
             os.mkdir(self.weights_path)
 
-    def build_model(self,input_shape,opt,loss_fn):
+    def build_model(self,input_shape,opt=None,loss_fn=None):
         self.input_shape = input_shape
         self.model = get_conv_autoencoder_model(input_shape)
-        if self.gpus <= 1:
-            self.model.summary()
-            self.model.compile(optimizer=opt,loss=loss_fn)
-            from keras.utils import plot_model
-            plot_model(self.model, 'model/ae/model_arch.png',show_layer_names=False, show_shapes=True)
-
-        else:
-            with tf.device("/cpu:0"):
-                self.gpu_model = multi_gpu_model(self.model, gpus=self.gpus)
-                self.gpu_model.compile(optimizer=opt,loss=loss_fn)
+        if opt:
+            if self.gpus <= 1:
+                self.model.summary()
+                self.model.compile(optimizer=opt,loss=loss_fn)
                 from keras.utils import plot_model
-                plot_model(self.model, 'model/ae/model_arch.png', show_layer_names=False, show_shapes=True)
+                plot_model(self.model, 'model/ae/model_arch.png',show_layer_names=False, show_shapes=True)
+
+            else:
+                with tf.device("/cpu:0"):
+                    self.gpu_model = multi_gpu_model(self.model, gpus=self.gpus)
+                    self.gpu_model.compile(optimizer=opt,loss=loss_fn)
+                    from keras.utils import plot_model
+                    plot_model(self.model, 'model/ae/model_arch.png', show_layer_names=False, show_shapes=True)
 
 
 def get_conv_autoencoder_model(input_shape):
