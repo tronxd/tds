@@ -8,7 +8,7 @@
     "use_whitening" : false,
     "rnn":
     {
-     "series_offset" : 16
+      "series_offset" : 16
     },
     "ae":
     {

@@ -13,8 +13,8 @@ import os
 import numpy as np
 from utilities.config_handler import get_config
 from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
-from utilities.detection import detect_reconstruction_anomalies_median,plot_spectogram_anomalies
-from utilities.preprocessing import  add_noise,load_fft_test_data ,load_fft_train_data,  reshape_to_blocks, persist_val_stat, load_val_stat
+from utilities.detection import detect_reconstruction_anomalies_median,plot_spectogram_anomalies, predict_by_ae
+from utilities.preprocessing import  add_noise,load_fft_test_data ,load_fft_train_data,  reshape_to_blocks, persist_val_stat, load_val_stat, persist_object
 from base.ae_model import AeModel
 
 
@@ -80,6 +80,8 @@ if train:
         block_shape = int(np.sqrt(fft_train.shape[0])),\
                              int(np.sqrt(fft_train.shape[1]))
 
+        persist_object(block_shape, os.path.join(conv_model.weights_path,'block_shape.pkl'))
+
         X_train = reshape_to_blocks(fft_train, block_shape)
 
         (X_train, _, X_val, _) = split_train_validation(X_train, X_train,validation_split)
@@ -99,25 +101,15 @@ if train:
 else:
     for rbw in rbw_set:
         weights_dir = "_".join((dataset_name,str(rbw)))
-        conv_model = AeModel(train_params,weights_dir,gpus)
         weights_load_path = os.path.join(namespace.weights_path,weights_dir)
-        fft_test = load_fft_test_data(data_dir , rbw, weights_load_path)
-        block_shape = int(np.sqrt(fft_test.shape[0])),int(np.sqrt(fft_test.shape[1]))
 
-        X_test = reshape_to_blocks(fft_test, block_shape)
+        pred = predict_by_ae(data_dir, weights_load_path)
 
-        conv_model.build_model(X_test.shape[1:],opt,loss_fn)
-        conv_model.load_weights()
-        test_errors = predict_ae_error_vectors(X_test, X_test, conv_model,batch_size)
-
-        error_median, error_std = load_val_stat(weights_load_path)
-
-        anomalies_indices = detect_reconstruction_anomalies_median(test_errors, error_median, error_std)
-        if len(anomalies_indices)>=1:
-            print('\n##############\n\n F O U N D   A N O M A L I E S \n\n##############')
+        if pred:
+            print('\n##############\n\n F O U N D   A N O M A L Y \n\n##############')
         else:
-            print('\n##############\n\n N O   A N O M A L I E S \n\n##############')
-        plot_spectogram_anomalies(X_test, anomalies_indices, conv_model.weights_path)
+            print('\n##############\n\n N O   A N O M A L Y \n\n##############')
+        # plot_spectogram_anomalies(X_test, anomalies_indices, freqs, time, conv_model.weights_path)
 
 
 def compute_batch_error(x,pred_x):

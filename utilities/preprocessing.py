@@ -9,7 +9,7 @@ import struct
 import xml.etree.ElementTree
 import os
 from zca.zca import ZCA
-from skimage.util import view_as_blocks
+from skimage.util import view_as_blocks, view_as_windows
 from scipy.fftpack import fft,fftshift
 from scipy.signal import get_window
 from scipy.signal import spectrogram
@@ -138,11 +138,15 @@ def trim_by_block_shape(data, block_shape):
 
 #assuming data is trimmed to block_shaoe (data.shape[0] % block_height == 0 & data.shape[1] % block_width == 0 )
 def reshape_to_blocks(data,block_shape):
-    trim_data = trim_by_block_shape(data, block_shape)
-    blocks = view_as_blocks(trim_data, block_shape)
+    overlap_window = 0.5
+    step = (int(block_shape[0]*overlap_window), int(block_shape[1]*overlap_window))
+    blocks = view_as_windows(data, block_shape, step)
+    axis_0 = np.expand_dims(np.arange(0, step[0] * blocks.shape[0], step[0]), axis=-1)
+    axis_1 = np.expand_dims(np.arange(0, step[1] * blocks.shape[1], step[1]), axis=0)
+    indices = np.stack([np.tile(axis_0, (1, blocks.shape[1])), np.tile(axis_1, (blocks.shape[0], 1))], axis=-1)
     #flatten the two first dimension
-    blocks = blocks.reshape(blocks.shape[0] * blocks.shape[1], blocks.shape[2], blocks.shape[3])
-    return np.expand_dims(blocks,-1) #expand dims to fit keras format
+    blocks = blocks.reshape(-1 , blocks.shape[2], blocks.shape[3], 1)
+    return indices, blocks #expand dims to fit keras format
 
 
 def samples2complex(samples):
@@ -346,9 +350,9 @@ def load_fft_test_data(test_data_dir , rbw,weights_dir):
         test_data = whiten_test_data(test_data,whiten_path)
 
     sample_rate = get_xhdr_sample_rate(test_data_dir)
-    _, _, fft_test = iq2fft(test_data,sample_rate,rbw)
+    freqs, time, fft_test = iq2fft(test_data,sample_rate,rbw)
     fft_test_scaled = scale_test_vectors(fft_test , scaler_path)
-    return fft_test_scaled
+    return freqs, time, fft_test_scaled
 
 def scale_train_vectors(vectors, scaler_save_path, rng):
     vectors_shape_len = len(vectors.shape)
