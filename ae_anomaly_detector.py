@@ -5,8 +5,6 @@
 
 
 import sys
-from keras.utils.training_utils import multi_gpu_model
-import tensorflow as tf
 import argparse
 from keras.optimizers import Adam
 import os

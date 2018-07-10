@@ -20,6 +20,7 @@ use_whitening=conf['preprocessing']['use_whitening']
 series_offset=conf['preprocessing']['rnn']['series_offset']
 feature_range = conf['preprocessing']['feature_range']
 fft_window_name = conf['preprocessing']['ae']['window']
+use_scaling = conf['preprocessing']['use_scaling']
 mode = conf['mode']
 assert mode in ['development','production']
 if mode == 'production':
@@ -29,8 +30,11 @@ import matplotlib.pyplot as plt
 
 
 def persist_object(obj, path):
+    (dir_name,_) = os.path.split(path)
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
     joblib.dump(obj, path)
-    print("savin g to:" + path)
+    print("saving to:" + path)
 
 def load_object(path):
     return joblib.load(path)
@@ -251,9 +255,7 @@ def iq2fft(data,sample_rate,rbw):
     num_samples = len(data)
     acq_time = 1/rbw
     slice_size = int(sample_rate * acq_time)
-    num_slices = int(num_samples / slice_size)
     data = trim_by_slice_length(data, slice_size)
-    data_split = np.array_split(data, num_slices)
     window = get_window('blackmanharris', slice_size)
 
     freqs, time, fft_d = spectrogram(data, fs=sample_rate, window=window, return_onesided=False, nperseg=slice_size,
@@ -332,7 +334,8 @@ def load_fft_train_data(train_data_dir , rbw,weights_dir):
     sample_rate = get_xhdr_sample_rate(train_data_dir)
 
     _, _, fft_train = iq2fft(train_data,sample_rate,rbw)
-    (fft_train, _) = scale_train_vectors(fft_train, scaler_path,rng=feature_range)
+    if use_scaling:
+        (fft_train, _) = scale_train_vectors(fft_train, scaler_path,rng=feature_range)
     return fft_train
 
 
@@ -345,8 +348,9 @@ def load_fft_test_data(test_data_dir , rbw,weights_dir):
 
     sample_rate = get_xhdr_sample_rate(test_data_dir)
     _, _, fft_test = iq2fft(test_data,sample_rate,rbw)
-    fft_test_scaled = scale_test_vectors(fft_test , scaler_path)
-    return fft_test_scaled
+    if use_scaling:
+        fft_test = scale_test_vectors(fft_test , scaler_path)
+    return fft_test
 
 def scale_train_vectors(vectors, scaler_save_path, rng):
     vectors_shape_len = len(vectors.shape)
