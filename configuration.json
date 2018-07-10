@@ -3,11 +3,11 @@
   "mode":"development",
   "preprocessing":
   {
-    "feature_names" : ["I", "Q"],
     "feature_range" : [-1,1],
     "use_whitening" : false,
     "rnn":
     {
+      "feature_names" : ["I", "Q"],
       "series_offset" : 16
     },
     "ae":
@@ -31,8 +31,8 @@
         "diag",
         "spherical"
       ],
-      "seq_input_length": 32,
-      "seq_output_length": 16,
+      "seq_input_length": 16,
+      "seq_output_length": 8,
       "input_padding": "post",
       "output_padding": "pre"
     },

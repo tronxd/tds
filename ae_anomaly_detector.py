@@ -56,6 +56,7 @@ train_params = conf['learning']['ae']
 use_noise=conf['preprocessing']['ae']['use_noise']
 feature_names = conf['preprocessing']['ae']['feature_names']
 rbw_set = conf['preprocessing']['ae']['rbw_set']
+feature_names = conf['preprocessing']['ae']['feature_names']
 
 
 data_dir = namespace.data_dir

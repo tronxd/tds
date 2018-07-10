@@ -24,21 +24,26 @@ class AeModel(BaseModel):
     def build_model(self,input_shape,opt=None,loss_fn=None):
         self.input_shape = input_shape
         self.model = get_conv_autoencoder_model(input_shape)
-        if not (opt is None):
+        if opt:
             if self.gpus <= 1:
                 self.model.summary()
                 self.model.compile(optimizer=opt,loss=loss_fn)
+                from keras.utils import plot_model
+                plot_model(self.model, 'model/ae/model_arch.png',show_layer_names=False, show_shapes=True)
+
             else:
                 with tf.device("/cpu:0"):
                     self.gpu_model = multi_gpu_model(self.model, gpus=self.gpus)
                     self.gpu_model.compile(optimizer=opt,loss=loss_fn)
+                    from keras.utils import plot_model
+                    plot_model(self.model, 'model/ae/model_arch.png', show_layer_names=False, show_shapes=True)
 
 
 def get_conv_autoencoder_model(input_shape):
     height = input_shape[0]
     width = input_shape[1]
     encoding_dimesions = []
-    kernel_shape = (math.ceil(height / 32) , math.ceil(width / 32))
+    kernel_shape = (height // 32) , (width // 32)
     inputs = Input(shape=input_shape,name='input')
     encoding_dimesions.append(get_layer_height_width(inputs))
 
@@ -83,5 +88,6 @@ def get_conv_autoencoder_model_paper(input_shape):
     outputs = Conv2D(1, ((int(block_length / 2) - 4), 1), activation='linear', padding='same')(h2_reshape)
     model = Model(inputs=inputs, outputs=outputs)
     model.compile(optimizer='adam', loss='mse')
+
     model.summary()
     return model
