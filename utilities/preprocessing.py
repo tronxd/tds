@@ -353,8 +353,9 @@ def load_fft_test_data(test_data_dir , rbw,weights_dir):
     sample_rate = get_xhdr_sample_rate(test_data_dir)
 
     freqs, time, fft_test = iq2fft(test_data,sample_rate,rbw)
-    fft_test_scaled = scale_test_vectors(fft_test , scaler_path)
-    return freqs, time, fft_test_scaled
+    if use_scaling:
+        fft_test = scale_test_vectors(fft_test , scaler_path)
+    return freqs, time, fft_test
 
 def scale_train_vectors(vectors, scaler_save_path, rng):
     vectors_shape_len = len(vectors.shape)
