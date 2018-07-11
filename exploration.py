@@ -1,75 +1,62 @@
+import keras
+from keras.datasets import mnist
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+from keras import backend as K
 
-# coding: utf-8
+batch_size = 128
+num_classes = 10
+epochs = 12
 
-# In[1]:
+# input image dimensions
+img_rows, img_cols = 28, 28
 
+# the data, split between train and test sets
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-import sys
-from keras.utils.training_utils import multi_gpu_model
-import tensorflow as tf
-import argparse
-from keras.optimizers import Adam
-import os
-import numpy as np
-from utilities.config_handler import get_config
-from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
-from utilities.detection import detect_reconstruction_anomalies_median,plot_spectogram_anomalies
-from utilities.preprocessing import  add_noise,load_fft_test_data ,load_fft_train_data,  reshape_to_blocks, persist_val_stat, load_val_stat
-from base.ae_model import AeModel
+if K.image_data_format() == 'channels_first':
+    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
+    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
+    input_shape = (1, img_rows, img_cols)
+else:
+    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
+    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
+    input_shape = (img_rows, img_cols, 1)
 
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train /= 255
+x_test /= 255
+print('x_train shape:', x_train.shape)
+print(x_train.shape[0], 'train samples')
+print(x_test.shape[0], 'test samples')
 
-# # Argument parsing
+# convert class vectors to binary class matrices
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
 
+model = Sequential()
+model.add(Conv2D(32, kernel_size=(3, 3),
+                 activation='relu',
+                 input_shape=input_shape))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation='softmax'))
 
+model.compile(loss=keras.losses.categorical_crossentropy,
+              optimizer=keras.optimizers.Adadelta(),
+              metrics=['accuracy'])
 
-parser = argparse.ArgumentParser()
-parser.prog = 'Spectrum Anomaly Detection'
-parser.description = 'Use this command parser for training or testing the anomaly detector'
-parser.add_argument('-m', '--mode', help='train or test mode', choices=['train', 'test'])
-parser.add_argument('-d', '--data-dir', help='I/Q recording directory')
-parser.add_argument('-w', '--weights-path', help='path for trained weights')
-
-
-namespace = parser.parse_args(sys.argv[1:])
-if not namespace.data_dir and namespace.mode == 'train':
-    parser.error('the -d arg must be present when mode is train')
-if not namespace.weights_path and namespace.mode == 'train':
-    parser.error('the -w arg must be present when mode is train')
-
-if not namespace.data_dir and namespace.mode == 'test':
-    parser.error('the -d arg must be present when mode is test')
-if not namespace.weights_path and namespace.mode == 'test':
-    parser.error('the -w arg must be present when mode is test')
-
-
-# # Hyper parameters
-
-# In[5]:
-
-
-conf=get_config()
-gpus = conf['gpus']
-lr=conf['learning']['ae']['lr']
-batch_size = conf['learning']['ae']['batch_size']
-validation_split = conf['learning']['ae']['validation_split']
-train_params = conf['learning']['ae']
-use_noise=conf['preprocessing']['ae']['use_noise']
-feature_names = conf['preprocessing']['ae']['feature_names']
-rbw_set = conf['preprocessing']['ae']['rbw_set']
-
-
-data_dir = namespace.data_dir
-train = namespace.mode == 'train'
-opt = Adam(lr=lr)
-loss_fn = 'mse'
-
-assert len(data_dir) != 0
-dataset_name = str.split(data_dir, '/')[-2]
-
-
-rbw  = rbw_set[0]
-weights_dir = "_".join((dataset_name, str(rbw)))
-weights_load_path = os.path.join(namespace.weights_path, weights_dir)
-
-error_median, error_std = load_val_stat(weights_load_path)
-print((error_median, error_std))
+model.fit(x_train, y_train,
+          batch_size=batch_size,
+          epochs=epochs,
+          verbose=1,
+          validation_data=(x_test, y_test))
+score = model.evaluate(x_test, y_test, verbose=0)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])

@@ -11,7 +11,7 @@ import os
 import numpy as np
 from utilities.config_handler import get_config
 from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
-from utilities.detection import detect_reconstruction_anomalies_median,plot_spectogram_anomalies, predict_by_ae
+from utilities.detection import detect_reconstruction_anomalies_median,plot_spectogram_anomalies, predict_folder_by_ae
 from utilities.preprocessing import  add_noise,load_fft_test_data ,load_fft_train_data,  reshape_to_blocks, persist_val_stat, load_val_stat, persist_object
 from base.ae_model import AeModel
 
@@ -81,7 +81,7 @@ if train:
 
         persist_object(block_shape, os.path.join(conv_model.weights_path,'block_shape.pkl'))
 
-        X_train = reshape_to_blocks(fft_train, block_shape)
+        block_indices, X_train = reshape_to_blocks(fft_train, block_shape)
 
         (X_train, _, X_val, _) = split_train_validation(X_train, X_train,validation_split)
 
@@ -102,7 +102,7 @@ else:
         weights_dir = "_".join((dataset_name,str(rbw)))
         weights_load_path = os.path.join(namespace.weights_path,weights_dir)
 
-        pred = predict_by_ae(data_dir, weights_load_path)
+        pred = predict_folder_by_ae(data_dir, weights_load_path)
 
         if pred:
             print('\n##############\n\n F O U N D   A N O M A L Y \n\n##############')

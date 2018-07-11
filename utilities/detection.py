@@ -4,7 +4,7 @@ __author__ = 's5806074'
 import numpy as np
 import os
 import pyemd
-from utilities.preprocessing import stitch_blocks_to_spectogram ,load_fft_test_data,  reshape_to_blocks, load_val_stat, load_object
+from utilities.preprocessing import stitch_blocks_to_spectogram ,get_fft_by_iq,  reshape_to_blocks, load_val_stat, load_object, get_xhdr_sample_rate, load_raw_data
 from utilities.config_handler import get_config
 import matplotlib.patches as patches
 from base.ae_model import AeModel
@@ -71,8 +71,12 @@ def plot_spectogram_anomalies(X , anomalies_indices, freqs, time, weights_dir):
         ax.add_patch(rect)
     plt.savefig(plot_path,dpi=2000,aspect='auto')
 
+def predict_folder_by_ae(data_dir, model_weights_dir):
+    sample_rate = get_xhdr_sample_rate(data_dir)
+    data_iq = load_raw_data(data_dir)
+    return predict_by_ae(data_iq, sample_rate, model_weights_dir)
 
-def predict_by_ae(data_dir, model_weights_dir):
+def predict_by_ae(data_iq, sample_rate, model_weights_dir):
     gpus = conf['gpus']
     train_params = conf['learning']['ae']
     batch_size = conf['learning']['ae']['batch_size']
@@ -81,7 +85,7 @@ def predict_by_ae(data_dir, model_weights_dir):
     found_anomaly_per_rbw = []
     for rbw in rbw_set:
         print('loading data and geting spectrogram...')
-        freqs, time, data_spectro = load_fft_test_data(data_dir, rbw, model_weights_dir)
+        freqs, time, data_spectro = get_fft_by_iq(data_iq, sample_rate, rbw, model_weights_dir)
 
         print('spliting to block and predicting AutoEncoders errors...')
         block_shape = load_object(os.path.join(model_weights_dir, 'block_shape.pkl'))

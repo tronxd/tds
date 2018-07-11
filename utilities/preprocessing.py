@@ -78,7 +78,6 @@ def get_xhdr_little_endian(xhdr_path):
 
 # In[5]:
 
-
 def load_csv_data(data_files,feature_names):
         df = pd.Series()
         for file in data_files:
@@ -87,7 +86,6 @@ def load_csv_data(data_files,feature_names):
         df = df.dropna(axis=1)
         data = df.values
         return data
-
 
 
 def load_xdat_data(data_files,num_samples):
@@ -344,16 +342,22 @@ def load_fft_train_data(train_data_dir , rbw,weights_dir):
 
 
 def load_fft_test_data(test_data_dir , rbw,weights_dir):
+    sample_rate = get_xhdr_sample_rate(test_data_dir)
+    test_data = load_raw_data(test_data_dir)
+    return get_fft_by_iq(test_data, sample_rate, rbw, weights_dir)
+
+
+def get_fft_by_iq(test_data, sample_rate, rbw,weights_dir):
     scaler_path = os.path.join(weights_dir,"train_scaler.pkl")
     whiten_path = os.path.join(weights_dir ,"zca_scaler.pkl")
-    test_data = load_raw_data(test_data_dir)
+
     if use_whitening:
         test_data = whiten_test_data(test_data,whiten_path)
 
-    sample_rate = get_xhdr_sample_rate(test_data_dir)
 
     freqs, time, fft_test = iq2fft(test_data,sample_rate,rbw)
-    fft_test_scaled = scale_test_vectors(fft_test , scaler_path)
+    if use_scaling:
+        fft_test_scaled = scale_test_vectors(fft_test , scaler_path)
     return freqs, time, fft_test_scaled
 
 def scale_train_vectors(vectors, scaler_save_path, rng):
