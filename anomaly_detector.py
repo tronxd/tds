@@ -7,16 +7,14 @@
 import sys
 import argparse
 from base_model.ae_model import AeModel
+from base_model.amir_model import AmirModel
 from skimage.util import view_as_windows
 from sklearn.metrics import roc_curve, roc_auc_score
 import matplotlib.pyplot as plt
 
-from keras.optimizers import Adam
 import os
 import numpy as np
-from utilities.config_handler import get_config
-from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
-from utilities.detection import detect_reconstruction_anomalies_median,plot_spectogram_anomalies, predict_folder_by_ae
+
 from utilities.preprocessing import  get_xhdr_sample_rate, load_raw_data, get_basic_block_len, persist_object
 from base_deep.ae_deep_model import AeDeepModel
 
@@ -29,7 +27,7 @@ parser = argparse.ArgumentParser()
 parser.prog = 'Spectrum Anomaly Detection'
 parser.description = 'Use this command parser for training or testing the anomaly detector'
 parser.add_argument('-m', '--mode', help='train or test mode', choices=['train', 'test', 'stat'])
-parser.add_argument('-M', '--model', help='chose model', choices=['ae'])
+parser.add_argument('-M', '--model', help='chose model', choices=['ae', 'amir'])
 parser.add_argument('-d', '--data-dir', help='I/Q recording directory')
 parser.add_argument('-w', '--weights-path', help='path for trained weights')
 
@@ -54,7 +52,8 @@ data_dir = namespace.data_dir
 model_path = namespace.weights_path
 mode = namespace.mode
 
-ModelClass_dic = {'ae': AeModel}
+ModelClass_dic = {'ae': AeModel,
+                  'amir': AmirModel}
 ModelClass = ModelClass_dic[namespace.model]
 
 ## loading data

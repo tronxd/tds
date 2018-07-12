@@ -114,7 +114,7 @@ def load_raw_data(data_dir):
         data = load_xdat_data(xdat_data_files,num_samples)
     return data
 
-def get_basic_block_len(sample_rate, delta_t=5e-3 ):
+def get_basic_block_len(sample_rate, delta_t=2e-3 ):
     return int(delta_t*sample_rate)
 
 def assure_iq_is_basic_block(iq_data, sample_rate):

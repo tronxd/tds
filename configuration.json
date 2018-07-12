@@ -14,7 +14,7 @@
     "ae":
     {
       "rbw_set" : [125e3],
-      "rbw" : 125e3,
+      "rbw" : 63e3,
       "feature_names":["P"] ,
       "use_noise":false,
       "window": "blackmanharris"
