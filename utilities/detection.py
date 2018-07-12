@@ -7,7 +7,7 @@ import pyemd
 from utilities.preprocessing import stitch_blocks_to_spectogram ,get_fft_by_iq,  reshape_to_blocks, load_val_stat, load_object, get_xhdr_sample_rate, load_raw_data
 from utilities.config_handler import get_config
 import matplotlib.patches as patches
-from base.ae_model import AeModel
+from base_deep.ae_deep_model import AeDeepModel
 from utilities.learning import predict_ae_error_vectors
 
 
@@ -90,10 +90,11 @@ def predict_by_ae(data_iq, sample_rate, model_weights_dir):
         print('spliting to block and predicting AutoEncoders errors...')
         block_shape = load_object(os.path.join(model_weights_dir, 'block_shape.pkl'))
         block_indices, data_blocks = reshape_to_blocks(data_spectro, block_shape)
-        conv_model = AeModel(train_params, model_weights_dir, gpus, direct=True)
+        conv_model = AeDeepModel(train_params, model_weights_dir, gpus, direct=True)
         conv_model.build_model(data_blocks.shape[1:])
         conv_model.load_weights()
         data_ae_errors = predict_ae_error_vectors(data_blocks, data_blocks, conv_model, batch_size)
+        data_ae_errors = np.reshape(data_ae_errors, (block_indices.shape[0], block_indices.shape[1]))
 
         print('declaring anomaly block...')
         error_median, error_std = load_val_stat(model_weights_dir)
@@ -111,4 +112,4 @@ def voting_anomalies(anomalies_indices, block_indices, time, freqs):
     per_freq_anomaly_percent = np.sum(anomalies_indices, axis=0) / anomalies_indices.shape[0]
     print(np.sum(anomalies_indices))
     max_percent = np.max(per_freq_anomaly_percent)
-    return max_percent>0.2
+    return max_percent>0.05

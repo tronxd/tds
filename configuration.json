@@ -14,6 +14,7 @@
     "ae":
     {
       "rbw_set" : [125e3],
+      "rbw" : 125e3,
       "feature_names":["P"] ,
       "use_noise":false,
       "window": "blackmanharris"
@@ -40,11 +41,12 @@
     "ae":
     {
       "models_dir": "model/ae",
-      "num_epochs":20,
+      "num_epochs":25,
       "batch_size":32,
       "lr":0.001,
       "validation_split":0.2,
-      "block_length":128
+      "block_length":128,
+      "block_shape":[300, 30]
     }
   },
   "detection":
@@ -56,7 +58,7 @@
     },
     "ae":
     {
-      "sigma":2.5
+      "sigma":3
     }
 
   }

@@ -114,6 +114,19 @@ def load_raw_data(data_dir):
         data = load_xdat_data(xdat_data_files,num_samples)
     return data
 
+def get_basic_block_len(sample_rate, delta_t=5e-3 ):
+    return int(delta_t*sample_rate)
+
+def assure_iq_is_basic_block(iq_data, sample_rate):
+    basic_len = get_basic_block_len(sample_rate)
+    if iq_data.shape[0] > basic_len:
+        print('iq_data too long... shortening to basic block')
+        return iq_data[:basic_len, :]
+    elif iq_data.shape[0] < basic_len:
+        print('not enough data! iq_data is too short...')
+        raise
+    else:
+        return iq_data
 
 
 def trim_by_slice_length(data, slice_length):
@@ -357,7 +370,8 @@ def get_fft_by_iq(test_data, sample_rate, rbw,weights_dir):
 
     freqs, time, fft_test = iq2fft(test_data,sample_rate,rbw)
     if use_scaling:
-        fft_test = scale_test_vectors(fft_test , scaler_path)
+        scaler = load_object(scaler_path)
+        fft_test = scale_test_vectors(fft_test , scaler)
     return freqs, time, fft_test
 
 def scale_train_vectors(vectors, scaler_save_path, rng):
@@ -372,9 +386,8 @@ def scale_train_vectors(vectors, scaler_save_path, rng):
     return (scaled_vectors, scaler)
 
 
-def scale_test_vectors(vectors, scaler_load_path):
+def scale_test_vectors(vectors, scaler):
     vectors_shape_len = len(vectors.shape)
-    scaler = load_object(scaler_load_path)
     if vectors_shape_len == 1:
         vectors = vectors.reshape(-1, 1)
     scaled_vectors = scaler.transform(vectors)
