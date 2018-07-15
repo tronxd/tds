@@ -122,14 +122,16 @@ def load_raw_data(data_dir):
         data = load_xdat_data(xdat_data_files,num_samples)
     return data
 
-def get_basic_block_len(sample_rate, delta_t=2e-3 ):
+def get_basic_block_len(sample_rate, delta_t=None):
+    if not delta_t:
+        delta_t = basic_time
     return int(delta_t*sample_rate)
 
-def trim_iq_basic_block(iq_data, sample_rate):
+def trim_iq_basic_block(iq_data, sample_rate, start=0):
     basic_len = get_basic_block_len(sample_rate, basic_time)
     if iq_data.shape[0] > basic_len:
         print('iq_data too long... shortening to basic block')
-        return iq_data[:basic_len, :]
+        return iq_data[start:start+basic_len, :]
     elif iq_data.shape[0] < basic_len:
         print('not enough data! iq_data is too short...')
         raise

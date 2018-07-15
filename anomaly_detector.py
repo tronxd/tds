@@ -16,7 +16,6 @@ import os
 import numpy as np
 
 from utilities.preprocessing import  get_xhdr_sample_rate, load_raw_data, get_basic_block_len, persist_object, trim_iq_basic_block
-from base_deep.ae_deep_model import AeDeepModel
 
 
 # # Argument parsing
@@ -69,10 +68,11 @@ elif mode == 'test':
     data_iq = trim_iq_basic_block(data_iq, sample_rate)
     model.plot_prediction(data_iq, sample_rate)
 
-    fig_path = os.path.join(model_path, data_dir)
+    data_name = os.path.basename(data_dir)
     f = plt.gcf()
-    f.suptitle('')
-    # f.savefig()
+    f.suptitle('useing model "' + model.name +'" on file: ' + data_name)
+    fig_path = os.path.join(model_path, data_name)
+    f.savefig(fig_path+'.png')
     plt.show()
 
 elif mode == 'stat':

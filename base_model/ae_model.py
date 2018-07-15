@@ -106,7 +106,6 @@ class AeModel(object):
         plt.imshow(pred_matrix, aspect='auto', origin='lower', extent=[pred_freqs[0], pred_freqs[-1], pred_time[0], pred_time[-1]])
         plt.sca(axes[1])
         plt.imshow(fft_d, aspect='auto', origin='lower', extent=[freqs[0], freqs[-1], time[0], time[-1]])
-        plt.show()
 
 
     def predict_basic_block(self, iq_data_basic_block, sample_rate):
