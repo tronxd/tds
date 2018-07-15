@@ -85,12 +85,12 @@ class AmirModel(object):
         max_freq_score = np.max(mean_score_per_freq)
         return max_freq_score
 
-    def plot_prediction(self, iq_data_basic_block, sample_rate):
+    def plot_prediction(self, iq_data_basic_block, sample_rate, log=False):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise "iq_data too long..."
-        _, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
+        _, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate, log)
         # pred_matrix[0,0] = -10
         # pred_matrix[-1,-1] = 0
         _, time, fft_d = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
@@ -102,7 +102,7 @@ class AmirModel(object):
         plt.sca(axes[1])
         plt.imshow(fft_d, aspect='auto', origin='lower', extent=imshow_limits)
 
-    def predict_basic_block(self, iq_data_basic_block, sample_rate):
+    def predict_basic_block(self, iq_data_basic_block, sample_rate, log=False):
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise "iq_data too long..."
@@ -123,7 +123,10 @@ class AmirModel(object):
         num_freqs = len(self.freqs)
         ret = np.zeros(fft_d.shape)
         for i in range(num_freqs):
-            ret[:,i] = -self.gaussians[i].pdf(fft_d[:,i])
+            if log:
+                ret[:, i] = -self.gaussians[i].logpdf(fft_d[:, i])
+            else:
+                ret[:, i] = -self.gaussians[i].pdf(fft_d[:,i])
 
         return time, ret
 
