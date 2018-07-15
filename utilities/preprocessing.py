@@ -63,6 +63,12 @@ def get_xhdr_scale_factor(xhdr_path):
     e=xml.etree.ElementTree.parse(xhdr_path)
     return float(e.find('captures').find('capture').get('acq_scale_factor'))
 
+def get_xhdr_center_freq(data_dir):
+    xhdr_files = [os.path.join(data_dir,file) for file in os.listdir(data_dir) if file.endswith('.xhdr')]
+    xhdr_path = xhdr_files[0]
+    e=xml.etree.ElementTree.parse(xhdr_path)
+    return int(e.find('captures').find('capture').get('center_frequency'))
+
 #assuming sampling rate is the same in consecutive xdat recordings
 def get_xhdr_sample_rate(data_dir):
     xhdr_files = [os.path.join(data_dir,file) for file in os.listdir(data_dir) if file.endswith('.xhdr')]
@@ -74,6 +80,7 @@ def get_xhdr_sample_rate(data_dir):
 def get_xhdr_little_endian(xhdr_path):
     e=xml.etree.ElementTree.parse(xhdr_path)
     return bool(e.find('data_files').find('data').get('little_endian'))
+
 
 
 # In[5]:
@@ -254,7 +261,7 @@ def iq2fft_manually(data,sample_rate,rbw):
 
 def iq2fft(data,sample_rate,rbw):
     data = samples2complex(data)
-    # data = remove_dc(data)
+    data = remove_dc(data)
 
     num_samples = len(data)
     acq_time = 1/rbw
@@ -264,7 +271,7 @@ def iq2fft(data,sample_rate,rbw):
 
     freqs, time, fft_d = spectrogram(data, fs=sample_rate, window=window, return_onesided=False, nperseg=slice_size,
                                          noverlap=3*slice_size//4, mode='complex')
-    fft_d = complex2power(fftshift(fft_d)).T
+    fft_d = complex2power(fftshift(fft_d.T))
     mid_freq_ind = int(np.ceil(len(freqs) / 2.0))
     freqs = np.concatenate([freqs[mid_freq_ind:], freqs[:mid_freq_ind]])
     return freqs, time, fft_d

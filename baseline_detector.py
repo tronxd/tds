@@ -12,8 +12,9 @@ from utilities.config_handler import get_config
 from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
 from utilities.detection import detect_reconstruction_anomalies_median, plot_spectogram_anomalies
 from utilities.preprocessing import add_noise, load_fft_test_data, load_fft_train_data, reshape_to_blocks, \
-    persist_object, load_object, persist_val_stat, load_val_stat, get_xhdr_sample_rate
+    persist_object, load_object, persist_val_stat, load_val_stat, get_xhdr_sample_rate , get_xhdr_center_freq
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 from scipy.stats import entropy
 
 
@@ -51,9 +52,9 @@ reference_file_name = "reference_spectogram.pkl"
 data_dir = namespace.data_dir
 
 f_s = get_xhdr_sample_rate(data_dir)
+center_freq = get_xhdr_center_freq(data_dir)
 t_s = 1 / f_s
 test_window_time = 10e-6
-
 
 
 assert len(data_dir) != 0
@@ -73,6 +74,8 @@ else:
         weights_load_path = os.path.join(namespace.weights_path, weights_dir)
         freqs_test, time_test, fft_test = load_fft_test_data(data_dir, rbw, weights_load_path)
 
+
+
         fft_test = fft_test / fft_test.sum(axis=0, keepdims=1)
         fft_ref = load_object(os.path.join(weights_load_path, reference_file_name))
 
@@ -80,7 +83,34 @@ else:
         for i in range(len(divergences)):
             divergences[i] = entropy(fft_test[:,i], fft_ref[:, i])
 
-        plt.show()
+        norm = LogNorm(vmin=np.min(fft_ref), vmax=np.max(fft_ref))
+
+        f1 = plt.figure(1)
+        plt.title("Test spectogram")
+        # plt.xticks(center_freq + freqs_test)
+        # plt.yticks(time_test)
+        plt.imshow(fft_test, aspect='auto', cmap='RdBu_r',norm=norm)
+        plt.savefig(os.path.join(data_dir,"spectogram_test.png"),dpi=f1.dpi,aspect='auto',cmap='rainbow',figsize=(40,10))
+        # f1.show()
+
+
+
+        f3 = plt.figure(3)
+        plt.title("Train spectogram")
+        # plt.xticks(center_freq + freqs_test)
+        # plt.yticks(time_test)
+        plt.imshow(fft_ref, aspect='auto',cmap='RdBu_r',norm=norm)
+        plt.savefig(os.path.join(data_dir,"spectogram_ref.png"),dpi=f3.dpi,aspect='auto',cmap='rainbow',figsize=(40,10))
+        # f3.show()
+
+        f2 = plt.figure(2)
+        plt.title("KL-Divergence, band-wise")
+        # plt.xticks(center_freq + freqs_test)
+        plt.plot(divergences)
+        plt.savefig(os.path.join(data_dir,"divergences.png"),dpi=f2.dpi,aspect='auto')
+        # f2.show()
+
+        # plt.show()
 
 
 

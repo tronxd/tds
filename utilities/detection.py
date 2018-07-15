@@ -29,6 +29,8 @@ import matplotlib.pyplot as plt
 def compute_emd_distributions(d1,d2,bins=50):
         return  pyemd.emd_samples(d1, d2, bins)
 
+
+
 # compute the emd between |samples_size| size of sub arrays to the train scores
 def compute_emd_split_samples(scores, train_scores, scores_sample_size=scores_sample_size):
     scores_split = np.array_split(scores, len(scores) / scores_sample_size)
