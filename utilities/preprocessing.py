@@ -85,7 +85,6 @@ def get_xhdr_little_endian(xhdr_path):
 
 # In[5]:
 
-
 def load_csv_data(data_files,feature_names):
         df = pd.Series()
         for file in data_files:
@@ -94,7 +93,6 @@ def load_csv_data(data_files,feature_names):
         df = df.dropna(axis=1)
         data = df.values
         return data
-
 
 
 def load_xdat_data(data_files,num_samples):
@@ -123,6 +121,19 @@ def load_raw_data(data_dir):
         data = load_xdat_data(xdat_data_files,num_samples)
     return data
 
+def get_basic_block_len(sample_rate, delta_t=2e-3 ):
+    return int(delta_t*sample_rate)
+
+def assure_iq_is_basic_block(iq_data, sample_rate):
+    basic_len = get_basic_block_len(sample_rate)
+    if iq_data.shape[0] > basic_len:
+        print('iq_data too long... shortening to basic block')
+        return iq_data[:basic_len, :]
+    elif iq_data.shape[0] < basic_len:
+        print('not enough data! iq_data is too short...')
+        raise
+    else:
+        return iq_data
 
 
 def trim_by_slice_length(data, slice_length):
@@ -351,17 +362,23 @@ def load_fft_train_data(train_data_dir , rbw,weights_dir):
 
 
 def load_fft_test_data(test_data_dir , rbw,weights_dir):
+    sample_rate = get_xhdr_sample_rate(test_data_dir)
+    test_data = load_raw_data(test_data_dir)
+    return get_fft_by_iq(test_data, sample_rate, rbw, weights_dir)
+
+
+def get_fft_by_iq(test_data, sample_rate, rbw,weights_dir):
     scaler_path = os.path.join(weights_dir,"train_scaler.pkl")
     whiten_path = os.path.join(weights_dir ,"zca_scaler.pkl")
-    test_data = load_raw_data(test_data_dir)
+
     if use_whitening:
         test_data = whiten_test_data(test_data,whiten_path)
 
-    sample_rate = get_xhdr_sample_rate(test_data_dir)
 
     freqs, time, fft_test = iq2fft(test_data,sample_rate,rbw)
     if use_scaling:
-        fft_test = scale_test_vectors(fft_test , scaler_path)
+        scaler = load_object(scaler_path)
+        fft_test = scale_test_vectors(fft_test , scaler)
     return freqs, time, fft_test
 
 def scale_train_vectors(vectors, scaler_save_path, rng):
@@ -376,9 +393,8 @@ def scale_train_vectors(vectors, scaler_save_path, rng):
     return (scaled_vectors, scaler)
 
 
-def scale_test_vectors(vectors, scaler_load_path):
+def scale_test_vectors(vectors, scaler):
     vectors_shape_len = len(vectors.shape)
-    scaler = load_object(scaler_load_path)
     if vectors_shape_len == 1:
         vectors = vectors.reshape(-1, 1)
     scaled_vectors = scaler.transform(vectors)

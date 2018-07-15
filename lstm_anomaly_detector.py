@@ -14,7 +14,7 @@ from utilities.preprocessing import series_to_supervised, trim_by_seq_length, re
     get_X_and_Y_columns,persist_object,load_object, load_iq_test_data, load_iq_train_data, scale_train_vectors, \
     scale_test_vectors
 from utilities.detection import compute_emd_split_samples,compute_emd_distributions, detect_emd_anomalies_median
-from base.rnn_model import RnnModel
+from base_deep.rnn_model import RnnDeepModel
 
 # # Argument parsing
 
@@ -77,7 +77,7 @@ if use_padding:
 else:
     loss_fn = 'mse'
 
-model_obj = RnnModel(train_params,weights_dir,gpus)
+model_obj = RnnDeepModel(train_params, weights_dir, gpus)
 
 
 
