@@ -85,7 +85,7 @@ class AeModel(object):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
-            raise "iq_data too long..."
+            raise("iq_data too long...")
         pred_freqs, pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
 
         mean_score_per_freq = np.mean(pred_matrix, axis=0)
@@ -96,7 +96,7 @@ class AeModel(object):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
-            raise "iq_data too long..."
+            raise("iq_data too long...")
         pred_freqs, pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
         pred_matrix[-1,-1] = sigma_ae
         freqs, time, fft_d = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
@@ -111,7 +111,7 @@ class AeModel(object):
     def predict_basic_block(self, iq_data_basic_block, sample_rate):
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
-            raise "iq_data too long..."
+            raise("iq_data too long...")
         if not self.loaded:
             self.load_model()
 
