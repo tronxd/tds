@@ -15,6 +15,7 @@ from scipy.signal import get_window
 from scipy.signal import spectrogram
 conf=get_config()
 gpus = conf['gpus']
+basic_time = conf['preprocessing']['basic_time']
 use_noise=conf['preprocessing']['ae']['use_noise']
 use_whitening=conf['preprocessing']['use_whitening']
 series_offset=conf['preprocessing']['rnn']['series_offset']
@@ -124,8 +125,8 @@ def load_raw_data(data_dir):
 def get_basic_block_len(sample_rate, delta_t=2e-3 ):
     return int(delta_t*sample_rate)
 
-def assure_iq_is_basic_block(iq_data, sample_rate):
-    basic_len = get_basic_block_len(sample_rate)
+def trim_iq_basic_block(iq_data, sample_rate):
+    basic_len = get_basic_block_len(sample_rate, basic_time)
     if iq_data.shape[0] > basic_len:
         print('iq_data too long... shortening to basic block')
         return iq_data[:basic_len, :]

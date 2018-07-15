@@ -28,11 +28,11 @@ loss_fn = 'mse'
 
 
 class AeModel(object):
-    def __init__(self, model_path='xxx'):
+    def __init__(self, model_path=None):
         self.rbw = rbw
-        self.name = 'ae_' + str(int(self.rbw))
-        if model_path == 'xxx':
-            self.model_path = os.path.join('model',self.name)
+        self.name = 'ae'
+        if not model_path:
+            self.model_path = os.path.join('model',self.name+'_' + str(int(self.rbw)))
         else:
             self.model_path = model_path
         if not os.path.exists(self.model_path):
@@ -43,7 +43,7 @@ class AeModel(object):
         self.scaler = None
         self.conv_model = None
 
-    def train(self, iq_data, sample_rate):
+    def preprocess_train(self, iq_data, sample_rate):
         scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
         self.whiten_path = os.path.join(self.model_path, "zca_scaler.pkl")
 

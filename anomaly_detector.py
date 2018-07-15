@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
-from utilities.preprocessing import  get_xhdr_sample_rate, load_raw_data, get_basic_block_len, persist_object
+from utilities.preprocessing import  get_xhdr_sample_rate, load_raw_data, get_basic_block_len, persist_object, trim_iq_basic_block
 from base_deep.ae_deep_model import AeDeepModel
 
 
@@ -35,13 +35,9 @@ parser.add_argument('-w', '--weights-path', help='path for trained weights')
 namespace = parser.parse_args(sys.argv[1:])
 if not namespace.data_dir and namespace.mode == 'train':
     parser.error('the -d arg must be present when mode is train')
-if not namespace.weights_path and namespace.mode == 'train':
-    parser.error('the -w arg must be present when mode is train')
 
 if not namespace.data_dir and namespace.mode == 'test':
     parser.error('the -d arg must be present when mode is test')
-if not namespace.weights_path and namespace.mode == 'test':
-    parser.error('the -w arg must be present when mode is test')
 
 
 # # Hyper parameters
@@ -64,14 +60,20 @@ model_path = model.model_path
 if mode == 'train':
     sample_rate = get_xhdr_sample_rate(data_dir)
     data_iq = load_raw_data(data_dir)
-    model.train(data_iq, sample_rate)
+    model.preprocess_train(data_iq, sample_rate)
 
 
 elif mode == 'test':
     sample_rate = get_xhdr_sample_rate(data_dir)
     data_iq = load_raw_data(data_dir)
+    data_ig = trim_iq_basic_block(data_iq, sample_rate)
     model.plot_prediction(data_iq, sample_rate)
 
+    fig_path = os.path.join(model_path, data_dir)
+    f = plt.gcf()
+    f.suptitle('')
+    # f.savefig()
+    plt.show()
 
 elif mode == 'stat':
     normal_path = os.path.join(data_dir, 'normal')

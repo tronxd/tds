@@ -28,11 +28,11 @@ loss_fn = 'mse'
 
 
 class AmirModel(object):
-    def __init__(self, model_path='xxx'):
+    def __init__(self, model_path=None):
         self.rbw = rbw
-        self.name = 'amir_' + str(int(self.rbw))
-        if model_path == 'xxx':
-            self.model_path = os.path.join('model',self.name)
+        self.name = 'amir'
+        if not model_path:
+            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
         else:
             self.model_path = model_path
         if not os.path.exists(self.model_path):
@@ -45,7 +45,7 @@ class AmirModel(object):
         self.stds = None
         self.gaussians = None
 
-    def train(self, iq_data, sample_rate):
+    def preprocess_train(self, iq_data, sample_rate):
         scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
         params_path = os.path.join(self.model_path, "model_params.pkl")
         ## getting spectrogram
@@ -96,8 +96,6 @@ class AmirModel(object):
         plt.imshow(pred_matrix, aspect='auto', origin='lower', extent=imshow_limits)
         plt.sca(axes[1])
         plt.imshow(fft_d, aspect='auto', origin='lower', extent=imshow_limits)
-        plt.show()
-
 
     def predict_basic_block(self, iq_data_basic_block, sample_rate):
         iq_data_basic_block = assure_iq_is_basic_block(iq_data_basic_block, sample_rate)
@@ -145,3 +143,4 @@ class AmirModel(object):
         self.gaussians = []
         for i in range(num_freqs):
             self.gaussians.append(multivariate_normal(self.means[i], self.stds[0]))
+        self.rbw = rbw

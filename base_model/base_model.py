@@ -3,7 +3,7 @@ class BaseModel(object):
     def __init__(self):
         raise NotImplementedError()
 
-    def train_model(self, iq_data):
+    def preprocess_train(self, iq_data):
         raise NotImplementedError()
 
     def test_model(self, iq_data):
