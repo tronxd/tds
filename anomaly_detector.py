@@ -66,7 +66,7 @@ if mode == 'train':
 elif mode == 'test':
     sample_rate = get_xhdr_sample_rate(data_dir)
     data_iq = load_raw_data(data_dir)
-    data_ig = trim_iq_basic_block(data_iq, sample_rate)
+    data_iq = trim_iq_basic_block(data_iq, sample_rate)
     model.plot_prediction(data_iq, sample_rate)
 
     fig_path = os.path.join(model_path, data_dir)

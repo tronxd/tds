@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-from utilities.preprocessing import  iq2fft, scale_train_vectors, whiten_train_data, get_config, reshape_to_blocks, add_noise, persist_val_stat, load_object, whiten_test_data, scale_test_vectors, load_val_stat, assure_iq_is_basic_block
+from utilities.preprocessing import  iq2fft, scale_train_vectors, whiten_train_data, get_config, reshape_to_blocks, add_noise, persist_val_stat, load_object, whiten_test_data, scale_test_vectors, load_val_stat, get_basic_block_len
 from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
 from base_deep.ae_deep_model import AeDeepModel
 from keras.optimizers import Adam
@@ -10,6 +10,7 @@ from keras.optimizers import Adam
 
 conf=get_config()
 lr=conf['learning']['ae']['lr']
+basic_time = conf['preprocessing']['basic_time']
 rbw = conf['preprocessing']['ae']['rbw']
 use_whitening=conf['preprocessing']['use_whitening']
 use_scaling = conf['preprocessing']['use_scaling']
@@ -82,7 +83,9 @@ class AeModel(object):
 
     def predict_score(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
-        iq_data_basic_block = assure_iq_is_basic_block(iq_data_basic_block, sample_rate)
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise "iq_data too long..."
         pred_freqs, pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
 
         mean_score_per_freq = np.mean(pred_matrix, axis=0)
@@ -91,7 +94,9 @@ class AeModel(object):
 
     def plot_prediction(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
-        iq_data_basic_block = assure_iq_is_basic_block(iq_data_basic_block, sample_rate)
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise "iq_data too long..."
         pred_freqs, pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
         pred_matrix[-1,-1] = sigma_ae
         freqs, time, fft_d = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
@@ -105,7 +110,9 @@ class AeModel(object):
 
 
     def predict_basic_block(self, iq_data_basic_block, sample_rate):
-        iq_data_basic_block = assure_iq_is_basic_block(iq_data_basic_block, sample_rate)
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise "iq_data too long..."
         if not self.loaded:
             self.load_model()
 
