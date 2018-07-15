@@ -20,25 +20,11 @@ batch_size = conf['learning']['ae']['batch_size']
 use_noise = conf['preprocessing']['ae']['use_noise']
 rbw_set = conf['preprocessing']['ae']['rbw_set']
 
-def print_record_pred(i, num_records, r, is_anomal, pred):
-    print('\n####################\n@@@@@@@@@@@@@@@@@@@@\n\n')
-    print('finished prediction on record: {}/{}\n'.format(i, num_records))
-    print('file name is: '+r)
-    print('it is: ', end='')
-    if is_anomal:
-        print('ANOMAL')
-    else:
-        print('NORMAL')
-    print('prediction is: ', end='')
-    if pred:
-        print('ANOMAL')
-    else:
-        print('NORMAL')
-    print('\n\n@@@@@@@@@@@@@@@@@@@@\n####################\n')
-    gc.collect()
 
+normal = ['CELL_NORM_2', 'CELL_NORM_3', 'CELL_NORM_4']
+anomaly = ['CELL_CW_-20MHz_0dB', 'CELL_CW_-20MHz_10dB', 'CELL_SWP_18MHz_50us_0dB', \
+          'CELL_SWP_18MHz_50us_10dB', 'CELL_SWP_18MHz_100us_0dB', 'CELL_SWP_18MHz_100us_10dB']
 
-model_weight_path = 'model\\ae\\CELL_125000.0'
 
 normal_path = 'iq_data\\CELL\\normal'
 anomal_path = 'iq_data\\CELL\\anomal'

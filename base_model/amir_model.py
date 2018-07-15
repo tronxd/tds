@@ -57,7 +57,7 @@ class AmirModel(object):
             self.scaler = scaler
 
         self.means = np.mean(fft_d, axis=0)
-        self.stds = np.mean(fft_d, axis=0)
+        self.stds = np.std(fft_d, axis=0)
         self.gen_gaussians()
 
         params_dic = {'freqs': self.freqs,
