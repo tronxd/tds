@@ -85,18 +85,14 @@ class AmirModel(object):
         max_freq_score = np.max(mean_score_per_freq)
         return max_freq_score
 
-    def plot_prediction(self, iq_data_basic_block, sample_rate, log=True):
+    def plot_prediction(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise("iq_data too long...")
-        _, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate, log)
-        if log:
-            pred_matrix[0,0] = 0
-            pred_matrix[-1,-1] = 10
-        else:
-            pred_matrix[0,0] = -1
-            pred_matrix[-1,-1] = 0
+        _, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
+        pred_matrix[0,0] = 0
+        pred_matrix[-1,-1] = 7
 
         _, time, fft_d = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
 
@@ -107,7 +103,7 @@ class AmirModel(object):
         plt.sca(axes[1])
         plt.imshow(fft_d, aspect='auto', origin='lower', extent=imshow_limits)
 
-    def predict_basic_block(self, iq_data_basic_block, sample_rate, log=False):
+    def predict_basic_block(self, iq_data_basic_block, sample_rate):
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise("iq_data too long...")
@@ -126,16 +122,8 @@ class AmirModel(object):
             fft_d = scale_test_vectors(fft_d, self.scaler)
 
         num_freqs = len(self.freqs)
-        ret = np.zeros(fft_d.shape)
-        for i in range(num_freqs):
-            if log:
-                ret[:, i] = -self.gaussians[i].logpdf(fft_d[:, i])
-            else:
-                ret[:, i] = -self.gaussians[i].pdf(fft_d[:,i])
-        if log:
-            ret = np.clip(ret, 0, 10)
-        else:
-            ret = np.clip(ret, -1, 0)
+        ret = np.abs(fft_d - np.expand_dims(self.means, axis=0)) / np.expand_dims(self.stds, axis=0)
+        ret = np.clip(ret, 0, 7)
 
         return time, ret
 

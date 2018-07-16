@@ -3,8 +3,8 @@
   "mode":"development",
   "preprocessing":
   {
-    "basic_time": 2e-3,
-    "use_scaling":true,
+    "basic_time": 1e-3,
+    "use_scaling":false,
     "feature_range" : [-1,1],
     "use_whitening" : false,
     "rnn":
