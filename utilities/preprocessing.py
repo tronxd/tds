@@ -13,6 +13,8 @@ from skimage.util import view_as_blocks, view_as_windows
 from scipy.fftpack import fft,fftshift
 from scipy.signal import get_window
 from scipy.signal import spectrogram
+import matplotlib.pyplot as plt
+
 conf=get_config()
 gpus = conf['gpus']
 basic_time = conf['preprocessing']['basic_time']
@@ -27,7 +29,6 @@ assert mode in ['development','production']
 if mode == 'production':
     import matplotlib
     matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 
 def persist_object(obj, path):
@@ -179,6 +180,21 @@ def samples2complex(samples):
 def complex2power(complex_data):
     return 20*np.log10(1000*np.absolute(complex_data))
 
+def complex2real(complex_data):
+    return np.real(complex_data)
+
+def complex2imag(complex_data):
+    return np.imag(complex_data)
+
+def complex2angle(complex_data):
+    return np.angle(complex_data)
+
+complex2scalar_dic = {'power': complex2power,
+                      'real': complex2real,
+                      'imag': complex2imag,
+                      'angle': complex2angle}
+
+
 def remove_dc(data):
     return data - np.mean(data)
 
@@ -273,7 +289,7 @@ def iq2fft_manually(data,sample_rate,rbw):
     fft_data = fft_to_matrix(fft_data)
     return fft_data
 
-def iq2fft(data,sample_rate,rbw):
+def iq2fft(data,sample_rate,rbw, mode='power'):
     data = samples2complex(data)
     data = remove_dc(data)
 
@@ -285,10 +301,18 @@ def iq2fft(data,sample_rate,rbw):
 
     freqs, time, fft_d = spectrogram(data, fs=sample_rate, window=window, return_onesided=False, nperseg=slice_size,
                                          noverlap=3*slice_size//4, mode='complex')
-    fft_d = complex2power(fftshift(fft_d.T))
+    if type(mode) == list:
+        fft_scalar = []
+        for m in mode:
+            complex2scalar = complex2scalar_dic[m]
+            fft_scalar.append(complex2scalar(fftshift(fft_d.T)))
+    else:
+        complex2scalar = complex2scalar_dic[mode]
+        fft_scalar = complex2scalar(fftshift(fft_d.T))
+
     mid_freq_ind = int(np.ceil(len(freqs) / 2.0))
     freqs = np.concatenate([freqs[mid_freq_ind:], freqs[:mid_freq_ind]])
-    return freqs, time, fft_d
+    return freqs, time, fft_scalar
 
 # Assume X is a 4D block tensor of the spectogram
 def stitch_blocks_to_spectogram(X):

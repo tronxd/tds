@@ -46,6 +46,8 @@ def save_plots(model, data_dir, log):
             fig_path = os.path.join(data_path, data_name + '_sample_' + str(j) + '_log.png')
         else:
             fig_path = os.path.join(data_path, data_name + '_sample_' + str(ind) + '.png')
+
+
         f.savefig(fig_path)
         plt.close()
         global i
@@ -55,6 +57,7 @@ def save_plots(model, data_dir, log):
 
 ModelClass_dic = {'ae': AeModel,
                   'amir': AmirModel}
+
 ModelClass = ModelClass_dic['amir']
 model = ModelClass()
 

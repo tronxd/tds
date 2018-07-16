@@ -44,6 +44,7 @@ def save_alot_spec(data_dir):
         plt.imshow(fft_d, aspect='auto', origin='lower', extent=[freqs[0], freqs[-1], time[0], time[-1]])
 
         f.suptitle(data_name)
+        f.set_size_inches(8, 6.5, forward=True)
 
         plt.savefig(os.path.join(plots_path, data_name + '_sample_' + str(j) + '.png'))
         plt.close(f)
