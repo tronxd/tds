@@ -4,7 +4,7 @@ __author__ = 's5806074'
 import numpy as np
 import os
 import pyemd
-from utilities.preprocessing import stitch_blocks_to_spectogram ,get_fft_by_iq,  reshape_to_blocks, load_val_stat, load_object, get_xhdr_sample_rate, load_raw_data
+from utilities.preprocessing import stitch_blocks_to_spectogram ,compute_fft_test_data,  reshape_to_blocks, load_val_stat, load_object, get_xhdr_sample_rate, load_raw_data
 from utilities.config_handler import get_config
 import matplotlib.patches as patches
 from base_deep.ae_deep_model import AeDeepModel
@@ -12,8 +12,8 @@ from utilities.learning import predict_ae_error_vectors
 
 
 import math
-
 conf=get_config()
+
 mode = conf['mode']
 scores_sample_size = conf['detection']['rnn']['scores_sample_size']
 sigma_rnn=conf['detection']['rnn']['sigma']
@@ -87,12 +87,12 @@ def predict_by_ae(data_iq, sample_rate, model_weights_dir):
     found_anomaly_per_rbw = []
     for rbw in rbw_set:
         print('loading data and geting spectrogram...')
-        freqs, time, data_spectro = get_fft_by_iq(data_iq, sample_rate, rbw, model_weights_dir)
+        freqs, time, data_spectro = compute_fft_test_data(data_iq, sample_rate, rbw, model_weights_dir)
 
         print('spliting to block and predicting AutoEncoders errors...')
         block_shape = load_object(os.path.join(model_weights_dir, 'block_shape.pkl'))
         block_indices, data_blocks = reshape_to_blocks(data_spectro, block_shape)
-        conv_model = AeDeepModel(train_params, model_weights_dir, gpus, direct=True)
+        conv_model = AeDeepModel(train_params, model_weights_dir, gpus)
         conv_model.build_model(data_blocks.shape[1:])
         conv_model.load_weights()
         data_ae_errors = predict_ae_error_vectors(data_blocks, data_blocks, conv_model, batch_size)
