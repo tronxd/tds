@@ -85,14 +85,19 @@ class AmirModel(object):
         max_freq_score = np.max(mean_score_per_freq)
         return max_freq_score
 
-    def plot_prediction(self, iq_data_basic_block, sample_rate, log=False):
+    def plot_prediction(self, iq_data_basic_block, sample_rate, log=True):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise "iq_data too long..."
         _, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate, log)
-        # pred_matrix[0,0] = -10
-        # pred_matrix[-1,-1] = 0
+        if log:
+            pred_matrix[0,0] = 0
+            pred_matrix[-1,-1] = 10
+        else:
+            pred_matrix[0,0] = -1
+            pred_matrix[-1,-1] = 0
+
         _, time, fft_d = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
 
         imshow_limits = [self.freqs[0], self.freqs[-1], time[0], time[-1]]
@@ -128,7 +133,7 @@ class AmirModel(object):
             else:
                 ret[:, i] = -self.gaussians[i].pdf(fft_d[:,i])
 
-        return time, ret
+        return time, np.clip(ret, 0, 10)
 
     def save_weights(self):
         raise NotImplementedError()
