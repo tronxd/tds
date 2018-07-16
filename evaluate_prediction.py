@@ -17,7 +17,7 @@ from base_model.amir_model import AmirModel
 
 # # Hyper parameters
 
-def save_plots(model, data_dir, log):
+def save_plots(model, data_dir):
     plots_path = os.path.join(model.model_path, 'eval')
     if not os.path.exists(plots_path):
         os.mkdir(plots_path)
@@ -37,15 +37,13 @@ def save_plots(model, data_dir, log):
     for ind,j in enumerate(starts):
         data_iq = glob_data_iq[j:j + basic_len, :]
 
-        model.plot_prediction(data_iq, sample_rate, log)
+        model.plot_prediction(data_iq, sample_rate)
 
         f = plt.gcf()
         f.suptitle('useing model "' + model.name + '" on file: ' + data_name + \
-                   '\n start index = ' + str(j) +' ;   log = ' + str(log))
-        if log:
-            fig_path = os.path.join(data_path, data_name + '_sample_' + str(j) + '_log.png')
-        else:
-            fig_path = os.path.join(data_path, data_name + '_sample_' + str(ind) + '.png')
+                   '\n start index = ' + str(j))
+
+        fig_path = os.path.join(data_path, data_name + '_sample_' + str(ind) + '.png')
 
         f.set_size_inches(8, 6.5, forward=True)
 
@@ -85,12 +83,11 @@ anomal_path = 'iq_data\\CELL\\anomal'
 
 num_records = len(normal_records)+len(anomal_records)
 
-for log in [False, True]:
-    i = 0
-    for r in normal_records:
-        data_dir = os.path.join(normal_path, r)
-        save_plots(model, data_dir, log)
+i = 0
+for r in normal_records:
+    data_dir = os.path.join(normal_path, r)
+    save_plots(model, data_dir)
 
-    for r in anomal_records:
-        data_dir = os.path.join(anomal_path, r)
-        save_plots(model, data_dir, log)
+for r in anomal_records:
+    data_dir = os.path.join(anomal_path, r)
+    save_plots(model, data_dir)
