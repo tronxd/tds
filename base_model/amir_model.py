@@ -78,7 +78,7 @@ class AmirModel(object):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
-            raise "iq_data too long..."
+            raise("iq_data too long...")
         pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
 
         mean_score_per_freq = np.mean(pred_matrix, axis=0)
@@ -89,7 +89,7 @@ class AmirModel(object):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
-            raise "iq_data too long..."
+            raise("iq_data too long...")
         _, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate, log)
         if log:
             pred_matrix[0,0] = 0
@@ -110,7 +110,7 @@ class AmirModel(object):
     def predict_basic_block(self, iq_data_basic_block, sample_rate, log=False):
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
-            raise "iq_data too long..."
+            raise("iq_data too long...")
         if not self.loaded:
             self.load_model()
 
@@ -132,8 +132,12 @@ class AmirModel(object):
                 ret[:, i] = -self.gaussians[i].logpdf(fft_d[:, i])
             else:
                 ret[:, i] = -self.gaussians[i].pdf(fft_d[:,i])
+        if log:
+            ret = np.clip(ret, 0, 10)
+        else:
+            ret = np.clip(ret, -1, 0)
 
-        return time, np.clip(ret, 0, 10)
+        return time, ret
 
     def save_weights(self):
         raise NotImplementedError()

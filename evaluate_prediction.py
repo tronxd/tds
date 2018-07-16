@@ -47,9 +47,14 @@ def save_plots(model, data_dir, log):
         else:
             fig_path = os.path.join(data_path, data_name + '_sample_' + str(ind) + '.png')
 
+        f.set_size_inches(8, 6.5, forward=True)
+
+        # plt.show()
+        # input('continue? [y]')
 
         f.savefig(fig_path)
         plt.close()
+
         global i
         i+=1
         print('working on file ' + data_name + ' - {}/{}'.format(i,5*num_records))

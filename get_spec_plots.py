@@ -46,8 +46,11 @@ def save_alot_spec(data_dir):
         f.suptitle(data_name)
         f.set_size_inches(8, 6.5, forward=True)
 
-        plt.savefig(os.path.join(plots_path, data_name + '_sample_' + str(j) + '.png'))
-        plt.close(f)
+        # plt.show()
+        # input('continue? [y]')
+
+        # plt.savefig(os.path.join(plots_path, data_name + '_sample_' + str(j) + '.png'))
+        # plt.close(f)
         print('workin on file ' + data_name + ' - {}/{}'.format(i,5*num_records))
 
 conf=get_config()

@@ -134,8 +134,7 @@ def trim_iq_basic_block(iq_data, sample_rate, start=0):
         print('iq_data too long... shortening to basic block')
         return iq_data[start:start+basic_len, :]
     elif iq_data.shape[0] < basic_len:
-        print('not enough data! iq_data is too short...')
-        raise
+        raise('not enough data! iq_data is too short...')
     else:
         return iq_data
 

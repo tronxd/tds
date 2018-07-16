@@ -70,7 +70,7 @@ elif mode == 'test':
 
     data_name = os.path.basename(data_dir)
     f = plt.gcf()
-    f.suptitle('useing model "' + model.name +'" on file: ' + data_name)
+    f.suptitle('using model "' + model.name +'" on file: ' + data_name)
     fig_path = os.path.join(model_path, data_name)
     f.savefig(fig_path+'.png')
     plt.show()
