@@ -292,7 +292,6 @@ def iq2fft(data,sample_rate,rbw, mode='power'):
     data = samples2complex(data)
     data = remove_dc(data)
 
-    num_samples = len(data)
     acq_time = 1/rbw
     slice_size = int(sample_rate * acq_time)
     data = trim_by_slice_length(data, slice_size)
@@ -373,39 +372,53 @@ def load_val_stat(weights_dir):
 
 
 def load_fft_train_data(train_data_dir , rbw,weights_dir):
-    scaler_path = os.path.join(weights_dir,"train_scaler.pkl")
-    whiten_path = os.path.join(weights_dir ,"zca_scaler.pkl")
-    train_data = load_raw_data(train_data_dir)
-    if use_whitening:
-        train_data = whiten_train_data(train_data,whiten_path)
-
+    iq_data = load_raw_data(train_data_dir)
     sample_rate = get_xhdr_sample_rate(train_data_dir)
 
-    _, _, fft_train = iq2fft(train_data,sample_rate,rbw)
+    fft_train = compute_fft_train_data(iq_data, sample_rate, rbw, weights_dir)
+    return fft_train
+
+
+def compute_fft_train_data(iq_data, sample_rate, rbw, weights_path):
+    scaler_path = os.path.join(weights_path, "train_scaler.pkl")
+    whiten_path = os.path.join(weights_path, "zca_scaler.pkl")
+
+    if use_whitening:
+        iq_data = whiten_train_data(iq_data,whiten_path)
+
+    freqs, time, fft_train = iq2fft(iq_data,sample_rate,rbw)
     if use_scaling:
         (fft_train, _) = scale_train_vectors(fft_train, scaler_path,rng=feature_range)
-    return fft_train
+
+    return freqs, time, fft_train
 
 
 def load_fft_test_data(test_data_dir , rbw,weights_dir):
     sample_rate = get_xhdr_sample_rate(test_data_dir)
-    test_data = load_raw_data(test_data_dir)
-    return get_fft_by_iq(test_data, sample_rate, rbw, weights_dir)
+    iq_data = load_raw_data(test_data_dir)
+    freqs, time, fft_test = compute_fft_test_data(iq_data , sample_rate , rbw , weights_dir)
+
+    return (freqs, time, fft_test)
 
 
-def get_fft_by_iq(test_data, sample_rate, rbw,weights_dir):
-    scaler_path = os.path.join(weights_dir,"train_scaler.pkl")
-    whiten_path = os.path.join(weights_dir ,"zca_scaler.pkl")
+
+def compute_fft_test_data(iq_data , sample_rate , rbw ,weights_dir):
+    scaler_path = os.path.join(weights_dir, "train_scaler.pkl")
+    whiten_path = os.path.join(weights_dir, "zca_scaler.pkl")
 
     if use_whitening:
-        test_data = whiten_test_data(test_data,whiten_path)
+        iq_data = whiten_test_data(iq_data,whiten_path)
 
+    freqs, time, fft_test = iq2fft(iq_data,sample_rate,rbw)
 
-    freqs, time, fft_test = iq2fft(test_data,sample_rate,rbw)
     if use_scaling:
         scaler = load_object(scaler_path)
         fft_test = scale_test_vectors(fft_test , scaler)
+
     return freqs, time, fft_test
+
+
+
 
 def scale_train_vectors(vectors, scaler_save_path, rng):
     vectors_shape_len = len(vectors.shape)
