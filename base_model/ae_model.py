@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from base_model.base_model import BaseModel
+
 import os
 from utilities.preprocessing import  iq2fft, scale_train_vectors, whiten_train_data, get_config, reshape_to_blocks, add_noise, persist_val_stat, load_object, whiten_test_data, scale_test_vectors, load_val_stat, get_basic_block_len
 from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
@@ -28,7 +30,7 @@ loss_fn = 'mse'
 
 
 
-class AeModel(object):
+class AeModel(BaseModel):
     def __init__(self, model_path=None):
         self.rbw = rbw
         self.name = 'ae'
@@ -139,7 +141,7 @@ class AeModel(object):
         blocks_freqs = freqs[block_indices[0,:,1]]
         return blocks_freqs, blocks_time, ret
 
-    def save_weights(self):
+    def save_model(self):
         raise NotImplementedError()
 
     def load_model(self):
