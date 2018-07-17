@@ -26,7 +26,7 @@ def save_alot_spec(data_dir):
     starts = np.random.randint(0, glob_data_iq.shape[0]-basic_len, (5,))
     print('random starts as indices:')
     print(starts)
-    for j in starts:
+    for ind,j in enumerate(starts):
         data_iq = glob_data_iq[j:j+basic_len,:]
         _, time, fft_d = iq2fft(data_iq, sample_rate, rbw)
         means = np.mean(fft_d, axis=0)
@@ -45,12 +45,15 @@ def save_alot_spec(data_dir):
         plt.imshow(fft_d, aspect='auto', origin='lower', extent=[freqs[0], freqs[-1], time[0], time[-1]])
 
         f.suptitle(data_name)
+        f.suptitle('file: ' + data_name + \
+                   '\nstart index = ' + str(j))
+
         f.set_size_inches(8, 6.5, forward=True)
 
         # plt.show()
         # input('continue? [y]')
 
-        fig_path = os.path.join(plots_path, data_name + '_sample_' + str(j))
+        fig_path = os.path.join(plots_path, data_name + '_sample_' + str(ind))
         save_fig(f, fig_path)
         plt.close(f)
         print('workin on file ' + data_name + ' - {}/{}'.format(i,5*num_records))
