@@ -3,7 +3,7 @@
   "mode":"development",
   "preprocessing":
   {
-    "basic_time": 1e-3,
+    "basic_time": 2e-3,
     "use_scaling":false,
     "feature_range" : [-1,1],
     "use_whitening" : false,
@@ -18,7 +18,7 @@
       "rbw" : 63e3,
       "feature_names":["P"] ,
       "use_noise":false,
-      "window": "blackmanharris"
+      "window": "hamming"
     }
   },
   "learning":

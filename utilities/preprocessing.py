@@ -299,7 +299,7 @@ def iq2fft(data,sample_rate,rbw, mode='power'):
     acq_time = 1/rbw
     slice_size = int(sample_rate * acq_time)
     data = trim_by_slice_length(data, slice_size)
-    window = get_window('blackmanharris', slice_size)
+    window = get_window(fft_window_name, slice_size)
 
     freqs, time, fft_d = spectrogram(data, fs=sample_rate, window=window, return_onesided=False, nperseg=slice_size,
                                          noverlap=3*slice_size//4, mode='complex')
