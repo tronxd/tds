@@ -12,5 +12,5 @@ import matplotlib.pyplot as plt
 
 
 def plot_spectogram(fft,freqs,time):
-    fig, ax = plt.subplots(figsize=(10,10))
+    fig, ax = plt.subplots(figsize=(15,15))
     ax.imshow(fft,aspect='auto', origin='upper', extent=[freqs[0], freqs[-1], time[0], time[-1]])
