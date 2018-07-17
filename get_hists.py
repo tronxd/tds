@@ -4,6 +4,7 @@ import gc
 import numpy as np
 import matplotlib.pyplot as plt
 from utilities.preprocessing import  get_xhdr_sample_rate, load_raw_data, get_basic_block_len, persist_object, trim_iq_basic_block, iq2fft, get_config
+from utilities.plots import save_fig_pickle, load_fig_pickle, save_fig
 
 
 def save_alot_spec(data_dir):
@@ -52,7 +53,9 @@ def save_alot_spec(data_dir):
         # plt.show()
         # input('continue? [y]')
         #
-        plt.savefig(os.path.join(plots_path, data_name + '_hists.png'))
+        fig_path = os.path.join(plots_path, data_name + '_hists')
+        save_fig(f, fig_path)
+
         plt.close(f)
         print('workin on file ' + data_name + ' - {}/{}'.format(i,sample_per_file*num_records))
 
