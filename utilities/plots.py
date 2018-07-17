@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 def save_fig(fig, file_path):
     save_fig_pickle(fig, file_path + '.pklfig')
     plt.savefig(file_path + '.png')
-    command = 'CALL activate tf-gpu\nopen_fig.py -d '+file_path + '.pklfig'
+    command = 'CALL activate tf-gpu\ncd C:\\Users\\USER\\PycharmProjects\\spectrum_analysis\npython open_fig.py -f '+ file_path + '.pklfig'
 
     with open(file_path+'.cmd' , 'w') as file:
         file.write(command)
