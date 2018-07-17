@@ -15,6 +15,8 @@ from utilities.detection import predict_by_ae, predict_folder_by_ae
 from utilities.preprocessing import persist_object, load_object, get_xhdr_sample_rate, load_raw_data, trim_iq_basic_block, get_config, get_basic_block_len, iq2fft
 from base_model.ae_model import AeModel
 from base_model.amir_model import AmirModel
+from utilities.plots import save_fig_pickle, load_fig_pickle, save_fig
+
 
 # # Hyper parameters
 
@@ -40,14 +42,13 @@ def save_sample_plots(model, data_dir):
         f.suptitle('useing model "' + model.name + '" on file: ' + data_name + \
                    '\n start index = ' + str(j))
 
-        fig_path = os.path.join(data_path, data_name + '_sample_' + str(ind) + '.png')
+        fig_path = os.path.join(data_path, data_name + '_sample_' + str(ind))
 
         f.set_size_inches(8, 6.5, forward=True)
 
         # plt.show()
         # input('continue? [y]')
-
-        f.savefig(fig_path)
+        save_fig(f, fig_path)
         plt.close()
 
         global i
@@ -94,7 +95,7 @@ def save_roc_plot(anomaly_dir, control_dir, num_samples=500):
     # plt.show()
     # input('continue? [y]')
     fig_path = os.path.join(data_path, data_name + '_ROC.png')
-    f.savefig(fig_path)
+    save_fig(f, fig_path)
     plt.close()
 
 
