@@ -179,6 +179,9 @@ def samples2complex(samples):
 def complex2power(complex_data):
     return 20*np.log10(1000*np.absolute(complex_data))
 
+def complex2abs2(complex_data):
+    return np.absolute(complex_data)**2
+
 def complex2real(complex_data):
     return np.real(complex_data)
 
@@ -189,6 +192,7 @@ def complex2angle(complex_data):
     return np.angle(complex_data)
 
 complex2scalar_dic = {'power': complex2power,
+                      'square_abs': complex2abs2,
                       'real': complex2real,
                       'imag': complex2imag,
                       'angle': complex2angle}
