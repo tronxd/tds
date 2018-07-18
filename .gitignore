@@ -7,3 +7,4 @@ model/
 .*hdf5
 __pycache__/
 iq_data/
+slides_pics/
