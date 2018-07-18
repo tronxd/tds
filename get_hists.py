@@ -76,7 +76,7 @@ preds = []
 trues = []
 i = 0
 
-complex2scalar_mode = ['power', 'real', 'imag', 'angle']
+complex2scalar_mode = ['power', 'square_abs', 'real', 'angle']
 intrest_freqs = [-30e6, -25e6, -17e6, -10e6, -3e6, 4e6, 11e6, 12e6, 13e6, 14e6, 19e6, 25e6, 30e6]
 
 for r in normal_records:

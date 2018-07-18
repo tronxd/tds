@@ -21,8 +21,8 @@ class BaseModel(object):
     def predict_basic_block(self, iq_data_basic_block):
         raise NotImplementedError()
 
-    def save_weights(self):
+    def save_model(self):
         raise NotImplementedError()
 
-    def load_weights(self):
+    def load_model(self):
         raise NotImplementedError()
