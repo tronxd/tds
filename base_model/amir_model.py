@@ -82,9 +82,9 @@ class AmirModel(BaseModel):
             raise("iq_data too long...")
         pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
 
-        mean_score_per_freq = np.mean(pred_matrix, axis=0)
-        max_freq_score = np.max(mean_score_per_freq)
-        return max_freq_score
+        score_per_time = np.percentile(pred_matrix, 85, axis=1)
+        score = np.mean(score_per_time)
+        return score
 
     def plot_prediction(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
@@ -100,9 +100,13 @@ class AmirModel(BaseModel):
         imshow_limits = [self.freqs[0], self.freqs[-1], time[0], time[-1]]
         fig, axes = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
         plt.sca(axes[0])
-        plt.imshow(pred_matrix, aspect='auto', origin='lower', extent=imshow_limits)
+        pred_im = plt.imshow(pred_matrix, aspect='auto', origin='lower', extent=imshow_limits)
+        plt.colorbar(pred_im)
+
         plt.sca(axes[1])
-        plt.imshow(fft_d, aspect='auto', origin='lower', extent=imshow_limits)
+        fft_im = plt.imshow(fft_d, aspect='auto', origin='lower', extent=imshow_limits)
+        plt.colorbar(fft_im)
+
 
     def predict_basic_block(self, iq_data_basic_block, sample_rate):
         basic_len = get_basic_block_len(sample_rate, basic_time)
