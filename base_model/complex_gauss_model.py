@@ -77,7 +77,9 @@ class ComplexGauss(BaseModel):
             raise("iq_data too long...")
         pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
 
-        score_per_time = np.percentile(pred_matrix, 85, axis=1)
+        # score_per_time = np.percentile(pred_matrix, 85, axis=1)
+        score_per_time = np.max(pred_matrix, axis=1)
+
         score = np.mean(score_per_time)
         return score
 
