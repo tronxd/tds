@@ -15,6 +15,8 @@ from utilities.detection import predict_by_ae, predict_folder_by_ae
 from utilities.preprocessing import persist_object, load_object, get_xhdr_sample_rate, load_raw_data, trim_iq_basic_block, get_config, get_basic_block_len, iq2fft
 from base_model.ae_model import AeModel
 from base_model.amir_model import AmirModel
+from base_model.complex_gauss_model import ComplexGauss
+
 from utilities.plots import save_fig_pickle, load_fig_pickle, save_fig
 
 
@@ -94,15 +96,16 @@ def save_roc_plot(anomaly_dir, control_dir, num_samples=500):
     f.set_size_inches(8, 6.5, forward=True)
     # plt.show()
     # input('continue? [y]')
-    fig_path = os.path.join(data_path, data_name + '_ROC.png')
+    fig_path = os.path.join(data_path, data_name + '_ROC')
     save_fig(f, fig_path)
     plt.close()
 
 
 ModelClass_dic = {'ae': AeModel,
-                  'amir': AmirModel}
+                  'amir': AmirModel,
+                  'complex_gauss': ComplexGauss}
 
-ModelClass = ModelClass_dic['amir']
+ModelClass = ModelClass_dic['complex_gauss']
 model = ModelClass()
 plots_path = os.path.join(model.model_path, 'eval')
 if not os.path.exists(plots_path):

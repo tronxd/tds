@@ -14,7 +14,7 @@ basic_time = conf['preprocessing']['basic_time']
 lr=conf['learning']['ae']['lr']
 rbw = conf['preprocessing']['ae']['rbw']
 use_whitening=conf['preprocessing']['use_whitening']
-use_scaling = conf['preprocessing']['use_scaling']
+
 feature_range = conf['preprocessing']['feature_range']
 sigma_ae = conf['detection']['ae']['sigma']
 block_shape = conf['learning']['ae']['block_shape']
@@ -29,10 +29,10 @@ loss_fn = 'mse'
 
 
 
-class AmirModel(BaseModel):
+class ComplexGauss(BaseModel):
     def __init__(self, model_path=None):
         self.rbw = rbw
-        self.name = 'amir'
+        self.name = 'ComplexGauss'
         if not model_path:
             self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
         else:
@@ -41,24 +41,19 @@ class AmirModel(BaseModel):
             os.mkdir(self.model_path)
 
         self.loaded = False
-        self.scaler = None
         self.freqs = None
         self.means = None
         self.stds = None
         self.gaussians = None
 
     def preprocess_train(self, iq_data, sample_rate):
-        scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
         params_path = os.path.join(self.model_path, "model_params.pkl")
         ## getting spectrogram
-        self.freqs, time, fft_d = iq2fft(iq_data, sample_rate, self.rbw)
-        ## scaling spectrogram
-        if use_scaling:
-            (fft_d, scaler) = scale_train_vectors(fft_d, scaler_path, rng=feature_range)
-            self.scaler = scaler
+        self.freqs, time, fft_list = iq2fft(iq_data, sample_rate, self.rbw, mode=['real', 'imag'])
+        fft_iq = np.stack(fft_list, axis=-1)
 
-        self.means = np.mean(fft_d, axis=0)
-        self.stds = np.std(fft_d, axis=0)
+        self.means = np.mean(fft_iq, axis=0)
+        self.stds = np.std(fft_iq, axis=0)
         self.gen_gaussians()
 
         params_dic = {'freqs': self.freqs,
@@ -93,9 +88,12 @@ class AmirModel(BaseModel):
             raise("iq_data too long...")
         _, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
         pred_matrix[0,0] = 0
-        pred_matrix[-1,-1] = 7
+        pred_matrix[-1,-1] = 10
 
         _, time, fft_d = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
+        fft_d = np.clip(fft_d, -150, -50)
+        fft_d[0,0] = -150
+        fft_d[-1,-1] = -50
 
         imshow_limits = [self.freqs[0], self.freqs[-1], time[0], time[-1]]
         fig, axes = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True)
@@ -120,15 +118,14 @@ class AmirModel(BaseModel):
             iq_data_basic_block = whiten_test_data(iq_data_basic_block, self.whiten_path)
 
         ## getting spectrogram
-        _, time, fft_d = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
+        self.freqs, time, fft_list = iq2fft(iq_data_basic_block, sample_rate, self.rbw, mode=['real', 'imag'])
+        fft_iq = np.stack(fft_list, axis=-1)
 
-        ## scaling spectrogram
-        if use_scaling:
-            fft_d = scale_test_vectors(fft_d, self.scaler)
+
 
         num_freqs = len(self.freqs)
-        ret = np.abs(fft_d - np.expand_dims(self.means, axis=0)) / np.expand_dims(self.stds, axis=0)
-        ret = np.clip(ret, 0, 7)
+        ret = np.sqrt(np.sum((fft_iq - np.expand_dims(self.means, axis=0))**2, axis=-1) / np.sum(np.expand_dims(self.stds, axis=0)**2, axis=-1))
+        ret = np.clip(ret, 0, 10)
 
         return time, ret
 
@@ -136,11 +133,7 @@ class AmirModel(BaseModel):
         raise NotImplementedError()
 
     def load_model(self):
-        scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
         params_path = os.path.join(self.model_path, "model_params.pkl")
-
-        if use_scaling:
-            self.scaler = load_object(scaler_path)
 
         params_dic = load_object(params_path)
         self.freqs = params_dic['freqs']
