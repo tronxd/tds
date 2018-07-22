@@ -19,6 +19,11 @@
       "feature_names":["P"] ,
       "use_noise":false,
       "window": "hamming"
+    },
+    "cepstrum":
+    {
+      "window_size": 512,
+      "rbw": 125e3
     }
   },
   "learning":
@@ -61,11 +66,5 @@
     {
       "sigma":3
     }
-  },
-  "cepstrum":
-    {
-      "median_kernel_size": 11,
-      "cepstrum_window_size": 512,
-      "rbw": 125e3
-    }
+  }
 }

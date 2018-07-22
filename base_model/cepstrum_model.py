@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-from base_model.base_model import BaseModel
+from base_model.base_model_class import BaseModel
 from utilities.preprocessing import  iq2fft, scale_train_vectors, whiten_train_data, get_config, reshape_to_blocks, add_noise, persist_val_stat, load_object, whiten_test_data, scale_test_vectors, load_val_stat, persist_object, get_basic_block_len, compute_fft_train_data
 from skimage.util import view_as_blocks, view_as_windows
 from scipy.signal import welch
@@ -11,7 +11,7 @@ from scipy.signal import welch
 conf=get_config()
 basic_time = conf['preprocessing']['basic_time']
 lr=conf['learning']['ae']['lr']
-rbw = conf['cepstrum']['rbw']
+rbw = conf['preprocessing']['cepstrum']['rbw']
 use_whitening=conf['preprocessing']['use_whitening']
 use_scaling = conf['preprocessing']['use_scaling']
 feature_range = conf['preprocessing']['feature_range']
@@ -23,21 +23,25 @@ batch_size = conf['learning']['ae']['batch_size']
 gpus = conf['gpus']
 use_noise=conf['preprocessing']['ae']['use_noise']
 loss_fn = 'mse'
-median_kernel_size = conf['cepstrum']['median_kernel_size']
-cepstrum_window_size = conf['cepstrum']['cepstrum_window_size']
+cepstrum_window_size = conf['preprocessing']['cepstrum']['window_size']
 basic_block_interval = conf['preprocessing']['basic_time']
 
 
 
 
 class  CepstrumModel(BaseModel):
-    def __init__(self, model_path=None):
+    def __init__(self,*args,**kwargs):
         self.rbw = rbw
-        self.name = 'cepstrum'
-        if not model_path:
-            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+        if 'name' in kwargs:
+            self.name = kwargs.pop('name')
         else:
-            self.model_path = model_path
+            self.name = 'cepstrum'
+
+        if 'model_path' in kwargs:
+            self.model_path = kwargs.pop('model_path')
+        else:
+            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
 
@@ -61,9 +65,7 @@ class  CepstrumModel(BaseModel):
         cepstrum_train = np.abs(np.apply_along_axis(compute_welch_spectrum, 0, fft_train))
         cepstrum_train = cepstrum_train[50:]  # removing the zero frequency
         cepstrum_train_means_over_time = np.mean(cepstrum_train, axis=1)
-        cepstrum_windows = view_as_windows(cepstrum_train_means_over_time, median_kernel_size, step=1)
-        self.cepstrum_means = np.apply_along_axis(lambda x: x - np.median(x), 1, cepstrum_windows)
-        self.cepstrum_means = self.cepstrum_means[:,median_kernel_size//2]
+        self.cepstrum_means = cepstrum_train_means_over_time
         self.cepstrum_max = np.max(self.cepstrum_means)
         persist_object(self.cepstrum_max, max_path)
         persist_object(self.cepstrum_means, means_path)
@@ -119,10 +121,7 @@ class  CepstrumModel(BaseModel):
         cepstrum_test = cepstrum_test[50:]  # removing the zero frequency
         cepstrum_test_means_over_time = np.mean(cepstrum_test, axis=1)
 
-        cepstrum_windows = view_as_windows(cepstrum_test_means_over_time, median_kernel_size, step=1)
-        cepstrum_test_means = np.apply_along_axis(lambda x: x - np.median(x), 1, cepstrum_windows).reshape(-1)
-
-        return cepstrum_test_means
+        return cepstrum_test_means_over_time
 
     def save_model(self):
         raise NotImplementedError()
@@ -140,8 +139,8 @@ class  CepstrumModel(BaseModel):
 
         self.loaded = True
 
-
+@staticmethod
 def compute_welch_spectrum(freq):
     freq = freq - np.mean(freq)
-    return welch(freq, len(freq*(1/basic_block_interval)) , nperseg=cepstrum_window_size , \
+    return welch(freq,nperseg=cepstrum_window_size , \
                  noverlap=3*cepstrum_window_size//4 , scaling = 'spectrum',window='hann')[1]

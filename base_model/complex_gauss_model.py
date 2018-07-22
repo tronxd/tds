@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-from base_model.base_model import BaseModel
+from base_model.base_model_class import BaseModel
 from utilities.preprocessing import  iq2fft, scale_train_vectors, whiten_train_data, get_config, reshape_to_blocks, add_noise, persist_val_stat, load_object, whiten_test_data, scale_test_vectors, load_val_stat, persist_object, get_basic_block_len
 from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
 from base_deep.ae_deep_model import AeDeepModel

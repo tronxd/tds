@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-from base_model.base_model import BaseModel
+from base_model.base_model_class import BaseModel
 from utilities.preprocessing import  iq2fft, scale_train_vectors, whiten_train_data, get_config, reshape_to_blocks, add_noise, persist_val_stat, load_object, whiten_test_data, scale_test_vectors, load_val_stat, persist_object, get_basic_block_len
 from utilities.learning import split_train_validation, train_model, predict_ae_error_vectors
 from base_deep.ae_deep_model import AeDeepModel
@@ -30,13 +30,15 @@ loss_fn = 'mse'
 
 
 class AmirModel(BaseModel):
-    def __init__(self, model_path=None):
+    def __init__(self, *args,**kwargs):
         self.rbw = rbw
         self.name = 'amir'
-        if not model_path:
-            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+        if 'model_path' in kwargs:
+            self.model_path = kwargs.pop('model_path')
         else:
-            self.model_path = model_path
+            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+
+
         if not os.path.exists(self.model_path):
             os.mkdir(self.model_path)
 
@@ -127,10 +129,10 @@ class AmirModel(BaseModel):
             fft_d = scale_test_vectors(fft_d, self.scaler)
 
         num_freqs = len(self.freqs)
-        ret = np.abs(fft_d - np.expand_dims(self.means, axis=0)) / np.expand_dims(self.stds, axis=0)
-        ret = np.clip(ret, 0, 7)
+        spectogram = np.abs(fft_d - np.expand_dims(self.means, axis=0)) / np.expand_dims(self.stds, axis=0)
+        spectogram = np.clip(spectogram, 0, 7)
 
-        return time, ret
+        return time, spectogram
 
     def save_model(self):
         raise NotImplementedError()

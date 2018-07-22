@@ -16,6 +16,7 @@ from base_model.ae_model import AeModel
 from base_model.amir_model import AmirModel
 from base_model.complex_gauss_model import ComplexGauss
 from base_model.cepstrum_model import CepstrumModel
+from base_model.gaussian_cepstrum_model import GaussianCepstrum
 
 from utilities.plots import save_fig_pickle, load_fig_pickle, save_fig
 
@@ -92,9 +93,10 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_samples=500):
 ModelClass_dic = {'ae': AeModel,
                   'amir': AmirModel,
                   'complex_gauss': ComplexGauss,
-                  'cepstrum': CepstrumModel}
+                  'cepstrum': CepstrumModel,
+                  'gaussian_cepstrum':GaussianCepstrum}
 
-ModelClass = ModelClass_dic['complex_gauss']
+ModelClass = ModelClass_dic['gaussian_cepstrum']
 model = ModelClass()
 plots_path = os.path.join(model.model_path, 'eval\\ROC\\sweep')
 if not os.path.exists(plots_path):
