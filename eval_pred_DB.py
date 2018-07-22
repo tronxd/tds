@@ -15,6 +15,7 @@ from utilities.preprocessing import persist_object, load_object, get_xhdr_sample
 from base_model.ae_model import AeModel
 from base_model.amir_model import AmirModel
 from base_model.complex_gauss_model import ComplexGauss
+from base_model.cepstrum_model import CepstrumModel
 
 from utilities.plots import save_fig_pickle, load_fig_pickle, save_fig
 
@@ -71,7 +72,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_samples=500):
     plt.ylabel('True Positive Rate')
     plt.title('ROC for anomalies with different dB')
     f.set_size_inches(8, 6.5, forward=True)
-    fig_path = os.path.join(plots_path, 'All_ROCs')
+    fig_path = os.path.join(plots_path, 'All_ROCs_max')
     save_fig(f, fig_path)
     plt.close()
 
@@ -83,14 +84,15 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_samples=500):
     plt.ylabel('AUC score')
     plt.title('Sweep anomaly\nArea Under Curve as function of\nInterference Signal Ratio')
     f.set_size_inches(8, 6.5, forward=True)
-    fig_path = os.path.join(plots_path, 'dB_vs_AUC')
+    fig_path = os.path.join(plots_path, 'dB_vs_AUC_max')
     save_fig(f, fig_path)
     plt.close()
 
 
 ModelClass_dic = {'ae': AeModel,
                   'amir': AmirModel,
-                  'complex_gauss': ComplexGauss}
+                  'complex_gauss': ComplexGauss,
+                  'cepstrum': CepstrumModel}
 
 ModelClass = ModelClass_dic['complex_gauss']
 model = ModelClass()
@@ -106,12 +108,11 @@ normal_path = 'iq_data\\CELL\\normal\\files_234'
 
 sample_rate = get_xhdr_sample_rate(normal_path)
 iq_normal = load_raw_data(normal_path)
-dBs = np.arange(-10, 36, 5)
+dBs = np.arange(-10, 16, 5)
 
 sweep_params = {'freq_band': [-5e6, 5e6],
                 'delta_t': 50e-6,
                 'dB': 0,}
 
 i = 0
-data_dir = os.path.join(normal_path, r)
-save_roc_plot(iq_normal, sample_rate, dBs, num_samples=500)
+save_roc_plot(iq_normal, sample_rate, dBs, num_samples=250)
