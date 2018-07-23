@@ -49,15 +49,30 @@ class AmirModel(BaseModel):
         self.stds = None
         self.gaussians = None
 
-    def preprocess_train(self, iq_data, sample_rate):
+    def preprocess_train_data(self, iq_data,sample_rate):
         scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
-        params_path = os.path.join(self.model_path, "model_params.pkl")
         ## getting spectrogram
         self.freqs, time, fft_d = iq2fft(iq_data, sample_rate, self.rbw)
         ## scaling spectrogram
         if use_scaling:
             (fft_d, scaler) = scale_train_vectors(fft_d, scaler_path, rng=feature_range)
             self.scaler = scaler
+        return (time, fft_d)
+
+    def preprocess_test_data(self, iq_data, sample_rate):
+        ## getting spectrogram
+        _, time, fft_d = iq2fft(iq_data, sample_rate, self.rbw)
+
+        ## scaling spectrogram
+        if use_scaling:
+            fft_d = scale_test_vectors(fft_d, self.scaler)
+        return (time, fft_d)
+
+
+
+    def train_data(self, preprocessed_data):
+        params_path = os.path.join(self.model_path, "model_params.pkl")
+        time, fft_d = preprocessed_data
 
         self.means = np.mean(fft_d, axis=0)
         self.stds = np.std(fft_d, axis=0)
@@ -72,10 +87,6 @@ class AmirModel(BaseModel):
         self.loaded = True
 
 
-
-    def test_model(self, iq_data, sample_rate):
-        # splits iq_data to basic block
-        raise NotImplementedError()
 
     def predict_basic_block_score(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
@@ -117,18 +128,7 @@ class AmirModel(BaseModel):
         if not self.loaded:
             self.load_model()
 
-        ## whitening
-        if use_whitening:
-            iq_data_basic_block = whiten_test_data(iq_data_basic_block, self.whiten_path)
-
-        ## getting spectrogram
-        _, time, fft_d = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
-
-        ## scaling spectrogram
-        if use_scaling:
-            fft_d = scale_test_vectors(fft_d, self.scaler)
-
-        num_freqs = len(self.freqs)
+        time, fft_d = self.preprocess_test_data(iq_data_basic_block, sample_rate)
         spectogram = np.abs(fft_d - np.expand_dims(self.means, axis=0)) / np.expand_dims(self.stds, axis=0)
         spectogram = np.clip(spectogram, 0, 7)
 
