@@ -34,6 +34,31 @@ class GaussianCepstrum(CepstrumModel):
         super(GaussianCepstrum,self).__init__(name='gaussian_cepstrum')
         self.amir_model = AmirModel(model_path=os.path.join(self.model_path,'amir'))
 
+    # Preprocess raw data and persist scalers
+    # Returns the preprocessed data
+    def preprocess_train_data(self, iq_data, sample_rate):
+        (time, fft_train) = self.amir_model.preprocess_train_data(iq_data,sample_rate)
+        self.amir_model.train_data(fft_train)
+
+        return (time,fft_train)
+
+    # Preprocess raw data from loaded scalers
+    # Returns the preprocessed data
+    def preprocess_test_data(self, iq_data,sample_rate):
+        raise NotImplementedError()
+
+
+
+
+
+
+
+
+
+
+
+
+##########################
     def preprocess_train(self, iq_data, sample_rate):
         max_path = os.path.join(self.model_path, "cepstrum_max.pkl")
         means_path = os.path.join(self.model_path, "cepstrum_train_means.pkl")

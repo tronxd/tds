@@ -26,9 +26,6 @@ loss_fn = 'mse'
 cepstrum_window_size = conf['preprocessing']['cepstrum']['window_size']
 basic_block_interval = conf['preprocessing']['basic_time']
 
-
-
-
 class  CepstrumModel(BaseModel):
     def __init__(self,*args,**kwargs):
         self.rbw = rbw
@@ -48,38 +45,63 @@ class  CepstrumModel(BaseModel):
         self.loaded = False
         self.cepstrum_max = None
         self.cepstrum_means = None
+        self.max_path = None
+        self.means_path = None
         self.scaler = None
 
-    def preprocess_train(self, iq_data, sample_rate):
-        max_path = os.path.join(self.model_path, "cepstrum_max.pkl")
-        means_path = os.path.join(self.model_path, "cepstrum_train_means.pkl")
-        scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
+    def preprocess_train_data(self, iq_data,sample_rate):
+        self.scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
 
         ## getting spectrogram
-        freqs, time, fft_train = iq2fft(iq_data, sample_rate, self.rbw)
+        self.freqs, time, fft_train = iq2fft(iq_data, sample_rate, self.rbw)
         ## scaling spectrogram
         if use_scaling:
-            (fft_train, scaler) = scale_train_vectors(fft_train, scaler_path, rng=feature_range)
+            (fft_train, scaler) = scale_train_vectors(fft_train, self.scaler_path, rng=feature_range)
             self.scaler = scaler
+        return (time,fft_train)
 
-        cepstrum_train = np.abs(np.apply_along_axis(compute_welch_spectrum, 0, fft_train))
+    def preprocess_test_data(self, iq_data,sample_rate):
+        self.scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
+
+        ## getting spectrogram
+        self.freqs, time, fft_test = iq2fft(iq_data, sample_rate, self.rbw)
+        ## scaling spectrogram
+        if use_scaling:
+            fft_test = scale_test_vectors(fft_test, self.scaler_path)
+
+        return (time, fft_test)
+
+    def train_data(self,preprocessed_data):
+        self.max_path = os.path.join(self.model_path, "cepstrum_max.pkl")
+        self.means_path = os.path.join(self.model_path, "cepstrum_train_means.pkl")
+        cepstrum_train = np.abs(np.apply_along_axis(compute_welch_spectrum, 0, preprocessed_data))
         cepstrum_train = cepstrum_train[50:]  # removing the zero frequency
         cepstrum_train_means_over_time = np.mean(cepstrum_train, axis=1)
         self.cepstrum_means = cepstrum_train_means_over_time
         self.cepstrum_max = np.max(self.cepstrum_means)
-        persist_object(self.cepstrum_max, max_path)
-        persist_object(self.cepstrum_means, means_path)
+        self.save_model()
 
         self.loaded = True
 
+    # Predict with loaded model on basic data block
+    def predict_basic_block(self, iq_data_basic_block, sample_rate):
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise ("iq_data too long...")
+        if not self.loaded:
+            self.load_model()
 
+        (time, fft_test) = self.preprocess_test_data(iq_data_basic_block,sample_rate)
+        cepstrum_test = np.abs(np.apply_along_axis(compute_welch_spectrum, 0, fft_test))
+        cepstrum_test = cepstrum_test[50:]  # removing the zero frequency
+        cepstrum_test_means_over_time = np.mean(cepstrum_test, axis=1)
 
-    def test_model(self, iq_data, sample_rate):
-        # splits iq_data to basic block
-        raise NotImplementedError()
+        return cepstrum_test_means_over_time
 
+    # Return an anomaly score on basic data block
     def predict_basic_block_score(self, iq_data_basic_block, sample_rate):
-        ## get only basic_block_len
+        # call predict_basic_block and does voting
+        # get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise("iq_data too long...")
@@ -88,8 +110,9 @@ class  CepstrumModel(BaseModel):
         score = np.percentile(pred_means, 95)
         return score
 
-    def plot_prediction(self, iq_data_basic_block, sample_rate):
-        ## get only basic_block_len
+    # call predict_basic_block and plots it nicely
+    def plot_prediction(self, iq_data_basic_block,sample_rate):
+        # get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise("iq_data too long...")
@@ -103,41 +126,21 @@ class  CepstrumModel(BaseModel):
         ax2.plot(self.cepstrum_means)
         ax2.set_title('Train cepstrum', fontsize=30)
 
-    def predict_basic_block(self, iq_data_basic_block, sample_rate):
-        basic_len = get_basic_block_len(sample_rate, basic_time)
-        if basic_len != iq_data_basic_block.shape[0]:
-            raise("iq_data too long...")
-        if not self.loaded:
-            self.load_model()
-
-        ## getting spectrogram
-        _, time, fft_test = iq2fft(iq_data_basic_block, sample_rate, self.rbw)
-
-        ## scaling spectrogram
-        if use_scaling:
-            fft_test = scale_test_vectors(fft_test, self.scaler)
-
-        cepstrum_test = np.abs(np.apply_along_axis(compute_welch_spectrum, 0, fft_test))
-        cepstrum_test = cepstrum_test[50:]  # removing the zero frequency
-        cepstrum_test_means_over_time = np.mean(cepstrum_test, axis=1)
-
-        return cepstrum_test_means_over_time
-
+    # Persist model parameters
     def save_model(self):
-        raise NotImplementedError()
+        persist_object(self.cepstrum_max, self.max_path)
+        persist_object(self.cepstrum_means, self.means_path)
 
+    # Load model parameters
     def load_model(self):
-        max_path = os.path.join(self.model_path, "cepstrum_max.pkl")
-        means_path = os.path.join(self.model_path, "cepstrum_train_means.pkl")
-        scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
-
         if use_scaling:
-            self.scaler = load_object(scaler_path)
+            self.scaler = load_object(self.scaler_path)
 
-        self.cepstrum_max = load_object(max_path)
-        self.cepstrum_means = load_object(means_path)
+        self.cepstrum_max = load_object(self.max_path)
+        self.cepstrum_means = load_object(self.means_path)
 
         self.loaded = True
+
 
 @staticmethod
 def compute_welch_spectrum(freq):

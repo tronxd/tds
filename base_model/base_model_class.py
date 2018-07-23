@@ -36,7 +36,7 @@ class BaseModel(object):
         raise NotImplementedError()
 
     # call predict_basic_block and plots it nicely
-    def plot_prediction(self, iq_data_basic_block):
+    def plot_prediction(self, iq_data_basic_block,sample_rate):
 
         raise NotImplementedError()
 
