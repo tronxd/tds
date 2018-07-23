@@ -31,9 +31,15 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_samples=500):
         sweep_params['dB'] = dB
         basic_len = get_basic_block_len(sample_rate)
 
-        a_starts = np.random.randint(0, iq_normal.shape[0] - basic_len, (num_samples,))
+        roc_start_indices_path = os.path.join('base_model','roc_start_indices.pkl')
 
-        c_starts = np.random.randint(0, iq_normal.shape[0] - basic_len, (num_samples,))
+        if os.path.isfile(roc_start_indices_path) :
+            a_starts, c_starts = load_object(roc_start_indices_path)
+
+        else:
+            a_starts = np.random.randint(0, iq_normal.shape[0] - basic_len, (num_samples,))
+            c_starts = np.random.randint(0, iq_normal.shape[0] - basic_len, (num_samples,))
+
 
         tot_starts = np.concatenate([a_starts, c_starts])
         y_true = np.concatenate([np.ones((num_samples,)), np.zeros((num_samples,))]).astype(bool)
