@@ -10,6 +10,7 @@ import argparse
 from base_model.ae_model import AeModel
 from base_model.amir_model import AmirModel
 from base_model.complex_gauss_model import ComplexGauss
+from base_model.gaussian_cepstrum_model import GaussianCepstrum
 from base_model.cepstrum_model import CepstrumModel
 
 from skimage.util import view_as_windows
@@ -30,7 +31,7 @@ parser = argparse.ArgumentParser()
 parser.prog = 'Spectrum Anomaly Detection'
 parser.description = 'Use this command parser for training or testing the anomaly detector'
 parser.add_argument('-m', '--mode', help='train or test mode', choices=['train', 'test', 'stat'])
-parser.add_argument('-M', '--model', help='chose model', choices=['ae', 'amir', 'complex_gauss', 'cepstrum'])
+parser.add_argument('-M', '--model', help='chose model', choices=['ae', 'amir', 'complex_gauss', 'cepstrum','gaussian_cepstrum'])
 parser.add_argument('-d', '--data-dir', help='I/Q recording directory')
 parser.add_argument('-w', '--weights-path', help='path for trained weights')
 
@@ -54,19 +55,20 @@ mode = namespace.mode
 ModelClass_dic = {'ae': AeModel,
                   'amir': AmirModel,
                   'complex_gauss': ComplexGauss,
-                  'cepstrum': CepstrumModel}
+                  'cepstrum': CepstrumModel,
+                  'gaussian_cepstrum':GaussianCepstrum}
 ModelClass = ModelClass_dic[namespace.model]
 
 ## loading data
 
-model = ModelClass(model_path)
+model = ModelClass()
 model_path = model.model_path
 
 if mode == 'train':
     sample_rate = get_xhdr_sample_rate(data_dir)
-    data_iq = load_raw_data(data_dir)
-    model.preprocess_train(data_iq, sample_rate)
-
+    iq_data = load_raw_data(data_dir)
+    (time,fft_train) = model.preprocess_train_data(iq_data,sample_rate)
+    model.train_data(fft_train)
 
 elif mode == 'test':
     sample_rate = get_xhdr_sample_rate(data_dir)

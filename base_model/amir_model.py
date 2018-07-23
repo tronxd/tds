@@ -49,19 +49,25 @@ class AmirModel(BaseModel):
         self.stds = None
         self.gaussians = None
 
-    def preprocess_train_data(self, iq_data,sample_rate):
+    def preprocess_train_data(self, iq_data,sample_rate,rbw=None):
         scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
         ## getting spectrogram
-        self.freqs, time, fft_d = iq2fft(iq_data, sample_rate, self.rbw)
+        if rbw:
+            self.freqs, time, fft_d = iq2fft(iq_data, sample_rate, rbw)
+        else:
+            self.freqs, time, fft_d = iq2fft(iq_data, sample_rate, self.rbw)
         ## scaling spectrogram
         if use_scaling:
             (fft_d, scaler) = scale_train_vectors(fft_d, scaler_path, rng=feature_range)
             self.scaler = scaler
         return (time, fft_d)
 
-    def preprocess_test_data(self, iq_data, sample_rate):
+    def preprocess_test_data(self, iq_data, sample_rate,rbw=None):
         ## getting spectrogram
-        _, time, fft_d = iq2fft(iq_data, sample_rate, self.rbw)
+        if rbw:
+            _, time, fft_d = iq2fft(iq_data, sample_rate, rbw)
+        else:
+            _, time, fft_d = iq2fft(iq_data, sample_rate, self.rbw)
 
         ## scaling spectrogram
         if use_scaling:
@@ -72,7 +78,7 @@ class AmirModel(BaseModel):
 
     def train_data(self, preprocessed_data):
         params_path = os.path.join(self.model_path, "model_params.pkl")
-        time, fft_d = preprocessed_data
+        fft_d = preprocessed_data
 
         self.means = np.mean(fft_d, axis=0)
         self.stds = np.std(fft_d, axis=0)

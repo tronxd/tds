@@ -56,7 +56,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_samples=500):
                 save_fig(f, fig_path)
                 plt.close()
 
-            y_score[i] = model.predict_basic_block_score(basic_iq)
+            y_score[i] = model.predict_basic_block_score(basic_iq,sample_rate)
 
         fpr, tpr, thresholds = roc_curve(y_true, y_score)
         fprs.append(fpr)

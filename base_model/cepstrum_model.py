@@ -50,31 +50,29 @@ class  CepstrumModel(BaseModel):
         self.scaler = None
 
     def preprocess_train_data(self, iq_data,sample_rate):
-        self.scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
+        scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
 
         ## getting spectrogram
         self.freqs, time, fft_train = iq2fft(iq_data, sample_rate, self.rbw)
         ## scaling spectrogram
         if use_scaling:
-            (fft_train, scaler) = scale_train_vectors(fft_train, self.scaler_path, rng=feature_range)
+            (fft_train, scaler) = scale_train_vectors(fft_train, scaler_path, rng=feature_range)
             self.scaler = scaler
         return (time,fft_train)
 
     def preprocess_test_data(self, iq_data,sample_rate):
         self.scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
 
-        ## getting spectrogram
         self.freqs, time, fft_test = iq2fft(iq_data, sample_rate, self.rbw)
         ## scaling spectrogram
         if use_scaling:
             fft_test = scale_test_vectors(fft_test, self.scaler_path)
+        ## getting spectrogram
 
         return (time, fft_test)
 
     def train_data(self,preprocessed_data):
-        self.max_path = os.path.join(self.model_path, "cepstrum_max.pkl")
-        self.means_path = os.path.join(self.model_path, "cepstrum_train_means.pkl")
-        cepstrum_train = np.abs(np.apply_along_axis(compute_welch_spectrum, 0, preprocessed_data))
+        cepstrum_train = np.abs(np.apply_along_axis(CepstrumModel.compute_welch_spectrum, 0, preprocessed_data))
         cepstrum_train = cepstrum_train[50:]  # removing the zero frequency
         cepstrum_train_means_over_time = np.mean(cepstrum_train, axis=1)
         self.cepstrum_means = cepstrum_train_means_over_time
@@ -92,7 +90,7 @@ class  CepstrumModel(BaseModel):
             self.load_model()
 
         (time, fft_test) = self.preprocess_test_data(iq_data_basic_block,sample_rate)
-        cepstrum_test = np.abs(np.apply_along_axis(compute_welch_spectrum, 0, fft_test))
+        cepstrum_test = np.abs(np.apply_along_axis(CepstrumModel.compute_welch_spectrum, 0, fft_test))
         cepstrum_test = cepstrum_test[50:]  # removing the zero frequency
         cepstrum_test_means_over_time = np.mean(cepstrum_test, axis=1)
 
@@ -128,22 +126,29 @@ class  CepstrumModel(BaseModel):
 
     # Persist model parameters
     def save_model(self):
-        persist_object(self.cepstrum_max, self.max_path)
-        persist_object(self.cepstrum_means, self.means_path)
+        max_path = os.path.join(self.model_path, "cepstrum_max.pkl")
+        means_path = os.path.join(self.model_path, "cepstrum_train_means.pkl")
+
+        persist_object(self.cepstrum_max, max_path)
+        persist_object(self.cepstrum_means, means_path)
 
     # Load model parameters
     def load_model(self):
+        max_path = os.path.join(self.model_path, "cepstrum_max.pkl")
+        means_path = os.path.join(self.model_path, "cepstrum_train_means.pkl")
+        scaler_path = os.path.join(self.model_path, "train_scaler.pkl")
         if use_scaling:
-            self.scaler = load_object(self.scaler_path)
+            self.scaler = load_object(scaler_path)
 
-        self.cepstrum_max = load_object(self.max_path)
-        self.cepstrum_means = load_object(self.means_path)
+
+        self.cepstrum_max = load_object(max_path)
+        self.cepstrum_means = load_object(means_path)
 
         self.loaded = True
 
 
-@staticmethod
-def compute_welch_spectrum(freq):
-    freq = freq - np.mean(freq)
-    return welch(freq,nperseg=cepstrum_window_size , \
-                 noverlap=3*cepstrum_window_size//4 , scaling = 'spectrum',window='hann')[1]
+    @staticmethod
+    def compute_welch_spectrum(freq):
+        freq = freq - np.mean(freq)
+        return welch(freq,nperseg=cepstrum_window_size , \
+                     noverlap=3*cepstrum_window_size//4 , scaling = 'spectrum',window='hann')[1]
