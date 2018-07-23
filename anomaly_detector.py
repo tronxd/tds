@@ -108,7 +108,7 @@ elif mode == 'stat':
         for i in range(data.shape[0]):
             records.append(data_dir)
             trues.append(False)
-            score = model.predict_score(data[i,:,:], sample_rate)
+            score = model.predict_basic_block_score(data[i, :, :])
             scores.append(score)
             i += 1
 
@@ -127,7 +127,7 @@ elif mode == 'stat':
         for i in range(data.shape[0]):
             records.append(data_dir)
             trues.append(True)
-            score = model.predict_score(data[i,:,:], sample_rate)
+            score = model.predict_basic_block_score(data[i, :, :])
             scores.append(score)
             i += 1
 

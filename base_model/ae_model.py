@@ -83,7 +83,7 @@ class AeModel(BaseModel):
         # splits iq_data to basic block
         raise NotImplementedError()
 
-    def predict_score(self, iq_data_basic_block, sample_rate):
+    def predict_basic_block_score(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:

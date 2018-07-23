@@ -56,7 +56,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_samples=500):
                 save_fig(f, fig_path)
                 plt.close()
 
-            y_score[i] = model.predict_score(basic_iq, sample_rate)
+            y_score[i] = model.predict_basic_block_score(basic_iq)
 
         fpr, tpr, thresholds = roc_curve(y_true, y_score)
         fprs.append(fpr)
@@ -98,7 +98,7 @@ ModelClass_dic = {'ae': AeModel,
 
 ModelClass = ModelClass_dic['gaussian_cepstrum']
 model = ModelClass()
-plots_path = os.path.join(model.model_path, 'eval\\ROC\\sweep')
+plots_path = os.path.join(model.model_path, 'eval/ROC/sweep')
 if not os.path.exists(plots_path):
     os.makedirs(plots_path)
 
@@ -106,7 +106,7 @@ if not os.path.exists(plots_path):
 normal_records = ['CELL_NORM_2']
 
 
-normal_path = 'iq_data\\CELL\\normal\\files_234'
+normal_path = 'iq_data/CELL/normal/files_234'
 
 sample_rate = get_xhdr_sample_rate(normal_path)
 iq_normal = load_raw_data(normal_path)
