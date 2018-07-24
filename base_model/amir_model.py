@@ -31,7 +31,11 @@ loss_fn = 'mse'
 
 class AmirModel(BaseModel):
     def __init__(self, *args,**kwargs):
-        self.rbw = rbw
+        if 'rbw' in kwargs:
+            self.rbw = kwargs.pop('rbw')
+        else:
+            self.rbw = rbw
+
         self.name = 'amir'
         if 'model_path' in kwargs:
             self.model_path = kwargs.pop('model_path')
@@ -92,18 +96,53 @@ class AmirModel(BaseModel):
 
         self.loaded = True
 
-
-
     def predict_basic_block_score(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
+        return self.predict_basic_block_score_max(iq_data_basic_block, sample_rate)
+
+
+
+    def predict_basic_block_score_max(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise("iq_data too long...")
         pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
 
-        score_per_time = np.percentile(pred_matrix, 85, axis=1)
+        score_per_time = np.max(pred_matrix, axis=1)
         score = np.mean(score_per_time)
         return score
+
+    def predict_basic_block_score_mean(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise("iq_data too long...")
+        pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
+
+        score = np.mean(pred_matrix)
+        return score
+
+    def predict_basic_block_score_percent(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise("iq_data too long...")
+        pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
+
+        score = np.sum(pred_matrix>=3.5) / pred_matrix.size
+        return score
+
+    def predict_basic_block_score_for_CW(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise("iq_data too long...")
+        pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
+
+        score = np.max(np.mean(pred_matrix, axis=0))
+        return score
+
 
     def plot_prediction(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len

@@ -69,3 +69,30 @@ def butter_lowpass(cutoff, fs, order=5):
     normal_cutoff = cutoff / nyq_rate
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return b, a
+
+
+def CW(iq_data, fs, fc, dB):
+    data_complex = iq_data[:, 0] + 1j * iq_data[:, 1]
+    t = np.arange(0, iq_data.shape[0]) / fs
+
+    upper_bound, lower_bound = 1e7, -1e7
+    data_LT = filter_sweep(data_complex, fs, upper_bound, lower_bound)
+    energy_of_data = np.sum(np.abs(data_LT) ** 2)
+
+    rand_phase = np.random.random()*2*np.pi
+    dis_complex = np.exp( 1j*(2*np.pi*fc*t + rand_phase) )
+    energy_of_CW = np.sum(np.abs(dis_complex) ** 2)
+
+    gain = 10 ** (dB / 10)
+    param = gain * energy_of_data / energy_of_CW
+
+    dis_complex = np.sqrt(param) * dis_complex
+
+    new_energy_of_CW = np.sum(np.abs(dis_complex) ** 2)
+
+    new_complex = data_complex + dis_complex
+    iq_new = np.zeros(iq_data.shape)
+    iq_new[:, 0] = np.real(new_complex)
+    iq_new[:, 1] = np.imag(new_complex)
+
+    return iq_new

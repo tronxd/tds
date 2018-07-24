@@ -1,8 +1,12 @@
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
+import os
 
 def save_fig(fig, file_path):
+    dir_path = os.path.dirname(file_path)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
     save_fig_pickle(fig, file_path + '.pklfig')
     plt.savefig(file_path + '.png')
     # command = 'CALL activate tf-gpu\ncd C:\\Users\\USER\\PycharmProjects\\spectrum_analysis\npython open_fig.py -f '+ file_path + '.pklfig'

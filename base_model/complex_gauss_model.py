@@ -30,13 +30,19 @@ loss_fn = 'mse'
 
 
 class ComplexGauss(BaseModel):
-    def __init__(self, model_path=None):
-        self.rbw = rbw
-        self.name = 'ComplexGauss'
-        if not model_path:
-            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+    def __init__(self, *args,**kwargs):
+        if 'rbw' in kwargs:
+            self.rbw = kwargs.pop('rbw')
         else:
-            self.model_path = model_path
+            self.rbw = rbw
+
+        self.name = 'ComplexGauss'
+        if 'model_path' in kwargs:
+            self.model_path = kwargs.pop('model_path')
+        else:
+            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+
+
         if not os.path.exists(self.model_path):
             os.mkdir(self.model_path)
 
@@ -64,6 +70,39 @@ class ComplexGauss(BaseModel):
 
         self.loaded = True
 
+    def preprocess_train_data(self, iq_data,sample_rate,rbw=None):
+        ## getting spectrogram
+        if rbw:
+            self.rbw = rbw
+        self.freqs, time, fft_list = iq2fft(iq_data, sample_rate, self.rbw, mode=['real', 'imag'])
+        fft_d = np.stack(fft_list, axis=-1)
+        return (time, fft_d)
+
+    def preprocess_test_data(self, iq_data, sample_rate,rbw=None):
+        ## getting spectrogram
+        if rbw:
+            self.rbw = rbw
+        self.freqs, time, fft_list = iq2fft(iq_data, sample_rate, self.rbw, mode=['real', 'imag'])
+        fft_d = np.stack(fft_list, axis=-1)
+        return (time, fft_d)
+
+
+
+    def train_data(self, preprocessed_data):
+        params_path = os.path.join(self.model_path, "model_params.pkl")
+        fft_d = preprocessed_data
+
+        self.means = np.mean(fft_d, axis=0)
+        self.stds = np.std(fft_d, axis=0)
+        self.gen_gaussians()
+
+        params_dic = {'freqs': self.freqs,
+                      'means': self.means,
+                      'stds': self.stds,
+                      'gaussians': self.gaussians}
+        persist_object(params_dic, params_path)
+
+        self.loaded = True
 
 
     def test_model(self, iq_data, sample_rate):
@@ -72,15 +111,50 @@ class ComplexGauss(BaseModel):
 
     def predict_basic_block_score(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
+        return self.predict_basic_block_score_max(iq_data_basic_block, sample_rate)
+
+
+
+    def predict_basic_block_score_max(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
             raise("iq_data too long...")
         pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
 
-        # score_per_time = np.percentile(pred_matrix, 85, axis=1)
         score_per_time = np.max(pred_matrix, axis=1)
-
         score = np.mean(score_per_time)
+        return score
+
+    def predict_basic_block_score_mean(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise("iq_data too long...")
+        pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
+
+        score = np.mean(pred_matrix)
+        return score
+
+    def predict_basic_block_score_for_CW(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise("iq_data too long...")
+        pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
+
+        score = np.max(np.mean(pred_matrix, axis=0))
+        return score
+
+
+    def predict_basic_block_score_percent(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise("iq_data too long...")
+        pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
+
+        score = np.sum(pred_matrix>=3.5) / pred_matrix.size
         return score
 
     def plot_prediction(self, iq_data_basic_block, sample_rate):
@@ -115,15 +189,7 @@ class ComplexGauss(BaseModel):
         if not self.loaded:
             self.load_model()
 
-        ## whitening
-        if use_whitening:
-            iq_data_basic_block = whiten_test_data(iq_data_basic_block, self.whiten_path)
-
-        ## getting spectrogram
-        self.freqs, time, fft_list = iq2fft(iq_data_basic_block, sample_rate, self.rbw, mode=['real', 'imag'])
-        fft_iq = np.stack(fft_list, axis=-1)
-
-
+        time, fft_iq = self.preprocess_test_data(iq_data_basic_block, sample_rate)
 
         num_freqs = len(self.freqs)
         ret = np.sqrt(np.sum((fft_iq - np.expand_dims(self.means, axis=0))**2, axis=-1) / np.sum(np.expand_dims(self.stds, axis=0)**2, axis=-1))
