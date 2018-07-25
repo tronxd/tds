@@ -57,7 +57,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=500, score_method
                 if i < 2:
                     model.plot_prediction(basic_iq, sample_rate)
                     f = plt.gcf()
-                    f.suptitle('using model "' + model.name + '" on sweep with ISR: ' + str(dB)+'dB')
+                    f.suptitle('Using model "' + model.name + '" on sweep with ISR: ' + str(dB)+'dB')
                     f.set_size_inches(8, 8, forward=True)
                     fig_path = os.path.join(plots_path, '{0:02d}_ISR_dB_{1}_sample_{2}'.format(ind, dB, i))
                     save_fig(f, fig_path)
@@ -67,7 +67,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=500, score_method
                 if normal_plot_saved < 2:
                     model.plot_prediction(basic_iq, sample_rate)
                     f = plt.gcf()
-                    f.suptitle('using model "' + model.name + '" on normal data')
+                    f.suptitle('Using model "' + model.name + '" on normal data')
                     f.set_size_inches(8, 8, forward=True)
                     fig_path = os.path.join(plots_path, 'normal_sample_{0}'.format(normal_plot_saved))
                     save_fig(f, fig_path)
@@ -109,7 +109,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=500, score_method
     f = plt.figure(1)
     plt.plot(dBs, aucs, '-o')
     plt.ylim([0,1])
-    plt.xlabel('ISR in dB of anomaly', fontsize=18)
+    plt.xlabel('ISR [dB]', fontsize=18)
     plt.ylabel('AUC score', fontsize=18)
     plt.title('Sweep anomaly\nArea Under Curve as function of\nInterference Signal Ratio', fontsize=20)
     plt.gca().grid(True)
