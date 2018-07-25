@@ -15,8 +15,9 @@
     "ae":
     {
       "rbw_set" : [125e3],
+      "use_scaling":true,
       "rbw" : 63e3,
-      "feature_names":["P"] ,
+      "feature_names":["P"],
       "use_noise":false,
       "window": "hamming"
     },
@@ -47,12 +48,12 @@
     "ae":
     {
       "models_dir": "model/ae",
-      "num_epochs":25,
+      "num_epochs":3,
       "batch_size":32,
       "lr":0.001,
       "validation_split":0.2,
       "block_length":128,
-      "block_shape":[300, 30]
+      "block_shape":[50, 100]
     }
   },
   "detection":

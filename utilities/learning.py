@@ -60,14 +60,14 @@ def split_train_validation(X, Y, validation_split):
 
 def train_model(model_obj, X_train, Y_train, X_val, Y_val ,train_params):
     # fit network
-    checkpoint_path = os.path.join(model_obj.weights_path,'model_checkpoint.hdf5')
+    checkpoint_path = os.path.join(model_obj.model_path,'model_checkpoint.hdf5')
     batch_size = train_params["batch_size"]
     num_epochs = train_params["num_epochs"]
     checkpointer = ModelCheckpoint(filepath=checkpoint_path, verbose=1)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1, mode='auto')
 
     if model_obj.gpus <= 1:
-        history = model_obj.model.fit(X_train, Y_train, epochs=num_epochs, batch_size=batch_size * gpus,
+        history = model_obj.net_model.fit(X_train, Y_train, epochs=num_epochs, batch_size=batch_size * gpus,
                             validation_data=(X_val, Y_val), shuffle=False, callbacks=[early_stop,checkpointer], verbose=2)
     else:
         history = model_obj.gpu_model.fit(X_train, Y_train, epochs=num_epochs, batch_size=batch_size * gpus,
@@ -79,7 +79,7 @@ def train_model(model_obj, X_train, Y_train, X_val, Y_val ,train_params):
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='validation')
     plt.legend()
-    plt.savefig(os.path.join(model_obj.weights_path , 'train_plot.png'))
+    plt.savefig(os.path.join(model_obj.model_path , 'train_plot.png'))
 
 
 def get_batch(data, batch_size):
@@ -122,7 +122,7 @@ def predict_rnn_error_vectors(X, Y, model_obj, batch_size):
 
 def predict_ae_error_vectors(X,Y,model_obj,batch_size):
     i=0
-    model = model_obj.model
+    model = model_obj.net_model
     errors = np.empty((X.shape[0]))
     for (batch_X,batch_Y) in zip(get_batch(X,batch_size),get_batch(Y,batch_size)):
         Y_pred = model.predict_on_batch(batch_X)
