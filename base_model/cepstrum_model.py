@@ -105,7 +105,7 @@ class  CepstrumModel(BaseModel):
             raise("iq_data too long...")
         pred_means = self.predict_basic_block(iq_data_basic_block, sample_rate) / self.cepstrum_max
 
-        score = np.percentile(pred_means, 95)
+        score = np.max(pred_means)
         return score
 
     # call predict_basic_block and plots it nicely

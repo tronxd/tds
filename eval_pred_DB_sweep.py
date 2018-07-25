@@ -17,6 +17,7 @@ from base_model.amir_model import AmirModel
 from base_model.complex_gauss_model import ComplexGauss
 from base_model.cepstrum_model import CepstrumModel
 from base_model.gaussian_cepstrum_model import GaussianCepstrum
+from base_model.cepstrum_2dfft import Cepstrum2DFFT
 
 from utilities.plots import save_fig_pickle, load_fig_pickle, save_fig
 
@@ -56,7 +57,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=500, score_method
                 basic_iq = sweep(basic_iq, sample_rate, **sweep_params)
                 if i < 2:
                     model.plot_prediction(basic_iq, sample_rate)
-                    f = plt.gcf()
+                    f = plt.gcf() #TODO check if figure exists
                     f.suptitle('Using model "' + model.name + '" on sweep with ISR: ' + str(dB)+'dB')
                     f.set_size_inches(8, 8, forward=True)
                     fig_path = os.path.join(plots_path, '{0:02d}_ISR_dB_{1}_sample_{2}'.format(ind, dB, i))
@@ -124,16 +125,14 @@ ModelClass_dic = {'ae': AeModel,
                   'amir': AmirModel,
                   'complex_gauss': ComplexGauss,
                   'cepstrum': CepstrumModel,
-                  'gaussian_cepstrum':GaussianCepstrum}
+                  'gaussian_cepstrum':GaussianCepstrum,
+                  'cepstrum_2dfft':Cepstrum2DFFT}
 
 ModelClass = ModelClass_dic['cepstrum']
 model = ModelClass()
 plots_path = os.path.join(model.model_path, 'eval/ROC/sweep')
 if not os.path.exists(plots_path):
     os.makedirs(plots_path)
-
-
-normal_records = ['CELL_NORM_2']
 
 
 normal_path = 'iq_data/CELL/normal/files_234'

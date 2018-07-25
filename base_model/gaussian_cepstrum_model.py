@@ -52,5 +52,3 @@ class GaussianCepstrum(CepstrumModel):
 
         return (time, fft_test)
 
-
-
