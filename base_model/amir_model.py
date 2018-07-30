@@ -36,15 +36,23 @@ class AmirModel(BaseModel):
         else:
             self.rbw = rbw
 
-        self.name = 'amir'
+        if 'name' in kwargs:
+            self.name = kwargs.pop('name')
+        else:
+            self.name = 'amir'
+
         if 'model_path' in kwargs:
             self.model_path = kwargs.pop('model_path')
         else:
-            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+            if 'model_root' in kwargs:
+                model_root = kwargs.pop('model_root')
+            else:
+                model_root = 'model'
+            self.model_path = os.path.join(model_root,self.name + '_' + str(int(self.rbw)))
 
 
         if not os.path.exists(self.model_path):
-            os.mkdir(self.model_path)
+            os.makedirs(self.model_path)
 
         self.loaded = False
         self.scaler = None
@@ -101,7 +109,6 @@ class AmirModel(BaseModel):
         return self.predict_basic_block_score_max(iq_data_basic_block, sample_rate)
 
 
-
     def predict_basic_block_score_max(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
@@ -143,12 +150,17 @@ class AmirModel(BaseModel):
         score = np.max(np.mean(pred_matrix, axis=0))
         return score
 
+    def get_score_methods(self):
+        dic = {'mean': self.predict_basic_block_score_mean,
+               'max_per_time': self.predict_basic_block_score_max,
+               'percent': self.predict_basic_block_score_percent}
+        return dic
 
     def plot_prediction(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len
         basic_len = get_basic_block_len(sample_rate, basic_time)
         if basic_len != iq_data_basic_block.shape[0]:
-            raise("iq_data too long...")
+            raise("iq_data not 1 [msec]...")
         _, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
         pred_matrix[0,0] = 0
         pred_matrix[-1,-1] = 7

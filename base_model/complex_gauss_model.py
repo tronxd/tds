@@ -40,7 +40,11 @@ class ComplexGauss(BaseModel):
         if 'model_path' in kwargs:
             self.model_path = kwargs.pop('model_path')
         else:
-            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+            if 'model_root' in kwargs:
+                model_root = kwargs.pop('model_root')
+            else:
+                model_root = 'model'
+            self.model_path = os.path.join(model_root,self.name + '_' + str(int(self.rbw)))
 
 
         if not os.path.exists(self.model_path):
@@ -156,6 +160,14 @@ class ComplexGauss(BaseModel):
 
         score = np.sum(pred_matrix>=3.5) / pred_matrix.size
         return score
+
+    def get_score_methods(self):
+        dic = {'normal': self.predict_basic_block_score,
+               'mean': self.predict_basic_block_score_mean,
+               'max_per_time': self.predict_basic_block_score_max,
+               'percent': self.predict_basic_block_score_percent}
+        return dic
+
 
     def plot_prediction(self, iq_data_basic_block, sample_rate):
         ## get only basic_block_len

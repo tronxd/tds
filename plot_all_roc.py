@@ -9,6 +9,8 @@ amir_path = os.path.join('model','amir_63000', 'eval', 'ROC')
 comp_gauss_path = os.path.join('model','ComplexGauss_63000', 'eval', 'ROC')
 cep_path = os.path.join('model','cepstrum_125000', 'eval', 'ROC')
 gauss_cep_path = os.path.join('model','gaussian_cepstrum_125000', 'eval', 'ROC')
+ae_path = os.path.join('model','ae_63000_block_50X100', 'eval', 'ROC')
+CW_dedicated_path = os.path.join('model','cw_dedicated_63000', 'eval', 'ROC')
 
 special_scores = ['mean', 'max_per_time', 'percent']
 
@@ -21,6 +23,7 @@ score_name = 'normal'
 d = load_object(os.path.join(gauss_cep_path, 'sweep', 'roc_score_'+score_name+'.pkl'))
 plt.plot(d['dBs'], d['aucs'], color='green', marker='.', label='sweep dedicated model #1')
 
+score_name = 'normal'
 d = load_object(os.path.join(cep_path, 'sweep', 'roc_score_'+score_name+'.pkl'))
 plt.plot(d['dBs'], d['aucs'], color='green', marker='.', label='sweep dedicated model #2')
 
@@ -32,6 +35,10 @@ for i,score_name in enumerate(special_scores):
     d = load_object(os.path.join(amir_path, 'sweep', 'roc_score_' + score_name + '.pkl'))
     plt.plot(d['dBs'], d['aucs'], color='red', marker=mark_style[i], label='"log_power gaussian" model, score method - ' + score_name)
 
+score_name = 'normal'
+d = load_object(os.path.join(ae_path, 'sweep', 'roc_score_'+score_name+'.pkl'))
+plt.plot(d['dBs'], d['aucs'], color='purple', marker='.', label='"ae" model')
+
 plt.title('sweep', fontsize=20)
 plt.ylim([0,1])
 plt.xlabel('ISR in dB of anomaly', fontsize=18)
@@ -42,8 +49,9 @@ f.set_size_inches(8, 6.5, forward=True)
 
 fig_path = os.path.join('model', '0_eval_all_models', 'sweep_dB_vs_auc')
 save_fig(f, fig_path)
-
 plt.close()
+
+
 
 ## CW
 f = plt.figure()
@@ -51,6 +59,7 @@ score_name = 'CW_dedicated'
 d = load_object(os.path.join(comp_gauss_path, 'CW', 'roc_score_'+score_name+'.pkl'))
 plt.plot(d['dBs'], d['aucs'], color='green', marker='.', label='CW dedicated model #1')
 
+score_name = 'CW_dedicated'
 d = load_object(os.path.join(amir_path, 'CW', 'roc_score_'+score_name+'.pkl'))
 plt.plot(d['dBs'], d['aucs'], color='green', marker='.', label='CW dedicated model #2')
 
@@ -62,6 +71,10 @@ for i,score_name in enumerate(special_scores):
     d = load_object(os.path.join(amir_path, 'CW', 'roc_score_' + score_name + '.pkl'))
     plt.plot(d['dBs'], d['aucs'], color='red', marker=mark_style[i], label='"log_power gaussian" model, score method - ' + score_name)
 
+score_name = 'normal'
+d = load_object(os.path.join(ae_path, 'CW', 'roc_score_'+score_name+'.pkl'))
+plt.plot(d['dBs'], d['aucs'], color='purple', marker='.', label='"ae" model')
+
 plt.title('CW', fontsize=20)
 plt.ylim([0,1])
 plt.xlabel('ISR in dB of anomaly', fontsize=18)
@@ -72,3 +85,4 @@ f.set_size_inches(8, 6.5, forward=True)
 
 fig_path = os.path.join('model', '0_eval_all_models', 'CW_dB_vs_auc')
 save_fig(f, fig_path)
+plt.close()

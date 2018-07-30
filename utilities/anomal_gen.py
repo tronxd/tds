@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import convolve, butter, lfilter, freqz, kaiserord, firwin
 
-def sweep(iq_data, fs, freq_band, delta_t, dB, filtered=True, order=20, coherence_time=5):
+def sweep(iq_data, fs, freq_band, delta_t, dB, order=20, coherence_time=5, duration='full', **kwargs):
     f0, f1 = freq_band
     data_len = iq_data.shape[0]
 
@@ -29,28 +29,27 @@ def sweep(iq_data, fs, freq_band, delta_t, dB, filtered=True, order=20, coherenc
         # sweep[t_len*k:t_len*(k+1)]=rayleigh* channel(np.exp(1j*2*np.pi*(f0+0.5*(b+del_b)*t)*t),ts)
         sweep[t_len * k:t_len * (k + 1)] = rayleigh * np.exp(1j * 2 * np.pi * (f0 + 0.5 * (b + del_b) * t) * t)
 
-    if (filtered):
-        filt_sw = filter_sweep(sweep, fs, f0, f1)
+    filt_sw = filter_sweep(sweep, fs, f0, f1)
 
-        energy_of_sweep = np.sum(np.abs(filt_sw) ** 2)
+    energy_of_sweep = np.sum(np.abs(filt_sw) ** 2)
 
-        gain = 10 ** (dB / 10)
-        param = gain * energy_of_data / energy_of_sweep
+    gain = 10 ** (dB / 10)
+    param = gain * energy_of_data / energy_of_sweep
 
-        filt_sw = np.sqrt(param) * filt_sw
+    filt_sw = np.sqrt(param) * filt_sw
 
+    if duration=='full':
         new_complex = data_complex + filt_sw
-        iq_new1 = np.zeros(iq_data.shape)
-        iq_new1[:, 0] = np.real(new_complex)
-        iq_new1[:, 1] = np.imag(new_complex)
-
-        return iq_new1
     else:
-        iq_new1 = np.zeros((data_len, 2))
-        iq_new1[:, 0] = np.real(sweep)
-        iq_new1[:, 1] = np.imag(sweep)
+        dur_len = int(duration*fs)
+        anomaly_start = np.random.randint(0,data_len-dur_len)
+        new_complex = data_complex.copy()
+        new_complex[anomaly_start:anomaly_start+dur_len] += filt_sw[anomaly_start:anomaly_start+dur_len]
 
-        return iq_new1
+    iq_new1 = np.zeros(iq_data.shape)
+    iq_new1[:, 0] = np.real(new_complex)
+    iq_new1[:, 1] = np.imag(new_complex)
+    return iq_new1
 
 
 def filter_sweep(data, fs, f0, f1, order=20):
@@ -71,7 +70,12 @@ def butter_lowpass(cutoff, fs, order=5):
     return b, a
 
 
-def CW(iq_data, fs, fc, dB):
+def CW(iq_data, fs, f_center, dB, **kwargs):
+    if type(f_center) == list:
+        fc = (f_center[1]-f_center[0])*np.random.random() - f_center[0]
+    else:
+        fc = f_center
+
     data_complex = iq_data[:, 0] + 1j * iq_data[:, 1]
     t = np.arange(0, iq_data.shape[0]) / fs
 

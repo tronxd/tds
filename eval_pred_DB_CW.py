@@ -12,7 +12,7 @@ from sklearn.metrics import roc_curve, roc_auc_score
 
 from utilities.config_handler import get_config, get_classes
 from utilities.anomal_gen import sweep, CW
-from utilities.preprocessing import persist_object, load_object, get_xhdr_sample_rate, load_raw_data, trim_iq_basic_block, get_config, get_basic_block_len, iq2fft
+from utilities.preprocessing import persist_object, load_object, get_xhdr_sample_rate, load_raw_data, trim_iq_basic_block, get_config, get_basic_block_len, iq2fft, path2list
 
 from utilities.plots import save_fig_pickle, load_fig_pickle, save_fig
 
@@ -29,7 +29,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=500, score_method
         sweep_params['dB'] = dB
         basic_len = get_basic_block_len(sample_rate)
 
-        roc_start_indices_path = os.path.join('base_model','roc_start_indices.pkl')
+        roc_start_indices_path = os.path.join(model_root,'roc_start_indices.pkl')
 
         num_samples = num_ROC_samples
 
@@ -41,6 +41,7 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=500, score_method
         else:
             a_starts = np.random.randint(0, iq_normal.shape[0] - basic_len, (num_samples,))
             c_starts = np.random.randint(0, iq_normal.shape[0] - basic_len, (num_samples,))
+            persist_object([a_starts, c_starts], roc_start_indices_path)
 
         tot_starts = np.concatenate([a_starts, c_starts])
         y_true = np.concatenate([np.ones((num_samples,)), np.zeros((num_samples,))]).astype(bool)
@@ -48,7 +49,6 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=500, score_method
 
         for i in range(2*num_samples):
             if y_true[i]:
-                anomal_freq = 30e6*np.random.random() - 23e6
                 basic_iq = trim_iq_basic_block(iq_normal, sample_rate, start=tot_starts[i])
                 basic_iq = CW(basic_iq, sample_rate, anomal_freq, dB)
                 if i < 2:
@@ -117,19 +117,16 @@ def save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=500, score_method
     plt.close()
 
 
+normal_path = 'iq_data/gsm/files_23'
+model_root = os.path.join('eval',path2list(normal_path)[1])
+
 ModelClass_dic = get_classes()
-
-
 ModelClass = ModelClass_dic['amir']
-model = ModelClass()
-plots_path = os.path.join(model.model_path, 'eval/ROC/CW')
+model = ModelClass(model_root=model_root)
+plots_path = os.path.join(model.model_path, 'eval/ROC/sweep')
 if not os.path.exists(plots_path):
     os.makedirs(plots_path)
 
-
-normal_records = ['CELL_NORM_2']
-
-normal_path = 'iq_data/CELL/normal/files_234'
 
 sample_rate = get_xhdr_sample_rate(normal_path)
 iq_normal = load_raw_data(normal_path)
@@ -141,21 +138,8 @@ sweep_params = {'freq_band': [-5e6, 5e6],
 
 i = 0
 
-# save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=250)
+score_methods = model.get_score_methods()
 
-
-score_meth = model.predict_basic_block_score_mean
-name = 'mean'
-save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=250, score_method=score_meth, score_name=name)
-
-score_meth = model.predict_basic_block_score_max
-name = 'max_per_time'
-save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=250, score_method=score_meth, score_name=name)
-
-score_meth = model.predict_basic_block_score_percent
-name = 'percent'
-save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=250, score_method=score_meth, score_name=name)
-
-score_meth = model.predict_basic_block_score_for_CW
-name = 'CW_dedicated'
-save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=250, score_method=score_meth, score_name=name)
+for score_name in score_methods:
+    score_meth = score_methods[score_name]
+    save_roc_plot(iq_normal, sample_rate, dBs, num_ROC_samples=250, score_method=score_meth, score_name=score_name)

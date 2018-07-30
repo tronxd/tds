@@ -41,6 +41,14 @@ def persist_object(obj, path):
 def load_object(path):
     return joblib.load(path)
 
+def path2list(path):
+    temp_path = path
+    p_list = []
+    while temp_path != '':
+        p_list.append(os.path.basename(temp_path))
+        temp_path = os.path.dirname(temp_path)
+    return list(reversed(p_list))
+
 def xdat2array(xdat_path,little_endian):
     with open(xdat_path,'rb') as f:
         b = f.read()
