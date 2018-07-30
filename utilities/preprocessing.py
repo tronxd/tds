@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 conf=get_config()
 gpus = conf['gpus']
-basic_time = conf['preprocessing']['basic_time']
+default_basic_time = conf['preprocessing']['basic_time']
 use_noise=conf['preprocessing']['ae']['use_noise']
 use_whitening=conf['preprocessing']['use_whitening']
 series_offset=conf['preprocessing']['rnn']['series_offset']
@@ -133,10 +133,10 @@ def load_raw_data(data_dir):
 
 def get_basic_block_len(sample_rate, delta_t=None):
     if not delta_t:
-        delta_t = basic_time
+        delta_t = default_basic_time
     return int(delta_t*sample_rate)
 
-def trim_iq_basic_block(iq_data, sample_rate, start=0):
+def trim_iq_basic_block(iq_data, sample_rate,basic_time=default_basic_time, start=0):
     basic_len = get_basic_block_len(sample_rate, basic_time)
     if iq_data.shape[0] > basic_len:
         # print('iq_data too long... shortening to basic block')

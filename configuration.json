@@ -23,8 +23,12 @@
     },
     "cepstrum":
     {
-      "window_size": 512,
-      "rbw": 125e3
+      "window_size": 512
+    },
+    "gmm":
+    {
+      "rbw": 125e3,
+     "basic_time": 3e-2
     }
   },
   "learning":
