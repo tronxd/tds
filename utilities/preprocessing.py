@@ -123,9 +123,7 @@ def load_raw_data(data_dir):
         data = load_xdat_data(xdat_data_files,num_samples)
     return data
 
-def get_basic_block_len(sample_rate, delta_t=None):
-    if not delta_t:
-        delta_t = default_basic_time
+def get_basic_block_len(sample_rate, delta_t=default_basic_time):
     return int(delta_t*sample_rate)
 
 def trim_iq_basic_block(iq_data, sample_rate,basic_time=default_basic_time, start=0):
@@ -157,6 +155,13 @@ def trim_by_block_shape(data, block_shape):
     # trim to the data to fit block shape
     trim_data = data[:trim_height, :trim_width]
     return trim_data
+
+
+def get_blocks_by_time(iq_data,sample_rate,delta_t=default_basic_time):
+    block_len = get_basic_block_len(sample_rate,delta_t)
+    iq_data = trim_by_slice_length(iq_data ,block_len)
+    iq_blocks = view_as_blocks(iq_data,(block_len,2))
+    return iq_blocks.reshape((-1,iq_blocks.shape[2],iq_blocks.shape[3]))
 
 
 

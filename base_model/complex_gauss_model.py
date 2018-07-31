@@ -23,8 +23,6 @@ validation_split = conf['learning']['ae']['validation_split']
 batch_size = conf['learning']['ae']['batch_size']
 gpus = conf['gpus']
 use_noise=conf['preprocessing']['ae']['use_noise']
-opt = Adam(lr=lr)
-loss_fn = 'mse'
 
 
 
