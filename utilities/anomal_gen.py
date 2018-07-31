@@ -66,6 +66,7 @@ def filter_sweep(data, fs, f0, f1, order=20):
 def butter_lowpass(cutoff, fs, order=5):
     nyq_rate = fs/2
     normal_cutoff = cutoff / nyq_rate
+    normal_cutoff = min(normal_cutoff, 0.9)
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return b, a
 

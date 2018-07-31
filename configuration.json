@@ -23,7 +23,8 @@
     },
     "cepstrum":
     {
-      "window_size": 512
+      "window_size": 512,
+      "rbw": 125e3
     },
     "gmm":
     {
