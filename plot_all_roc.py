@@ -1,74 +1,69 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from utilities.preprocessing import persist_object, load_object
+from utilities.preprocessing import persist_object, load_object, path2list
 from utilities.plots import save_fig
+from utilities.config_handler import get_config, get_classes
+import argparse
+import sys
+
+def main(sys_args):
+    def plot_all_roc(root_path, general_models, special_models, anomaly_name):
+        mark_style = ['o', '^', 's', 'v']
+        colors = ['purple', 'red', 'blue', 'green']
+        ModelClass_dic = get_classes()
+
+        f = plt.figure()
+        for i,model_name in enumerate(special_models):
+            model = ModelClass_dic[model_name](model_root=root_path)
+            score_name = list(model.get_score_methods().keys())[0]
+            d = load_object(os.path.join(model.model_path,'eval', 'ROC', anomaly_name, 'roc_score_' + score_name + '.pkl'))
+            plt.plot(d['dBs'], d['aucs'], color=colors[-1], marker=mark_style[i], label=model_name+', score method - '+score_name)
+
+        for i,model_name in enumerate(general_models):
+            model = ModelClass_dic[model_name](model_root=root_path)
+            score_methods_dic = model.get_score_methods()
+            for j,score_name in enumerate(score_methods_dic.keys()):
+                d = load_object(os.path.join(model.model_path,'eval', 'ROC', anomaly_name, 'roc_score_' + score_name + '.pkl'))
+                plt.plot(d['dBs'], d['aucs'], color=colors[i], marker=mark_style[j], label=model_name+', score method - '+score_name)
 
 
-amir_path = os.path.join('model','amir_63000', 'eval', 'ROC')
-comp_gauss_path = os.path.join('model','ComplexGauss_63000', 'eval', 'ROC')
-cep_path = os.path.join('model','cepstrum_125000', 'eval', 'ROC')
-gauss_cep_path = os.path.join('model','gaussian_cepstrum_125000', 'eval', 'ROC')
+        plt.ylim([0, 1])
+        plt.xlabel('ISR in dB of anomaly', fontsize=18)
+        plt.ylabel('AUC score', fontsize=18)
+        plt.title(anomaly_name, fontsize=20)
+        plt.legend()
+        plt.gca().grid(True)
+        f.set_size_inches(8, 6.5, forward=True)
 
-special_scores = ['mean', 'max_per_time', 'percent']
+        fig_path = os.path.join(root_path, '0_all_ROC', 'dB_vs_AUC_'+anomaly_name)
 
-mark_style = ['^','o','s','v']
+        save_fig(f, fig_path)
+        plt.close()
 
 
-## sweep
-f = plt.figure()
-score_name = 'normal'
-d = load_object(os.path.join(gauss_cep_path, 'sweep', 'roc_score_'+score_name+'.pkl'))
-plt.plot(d['dBs'], d['aucs'], color='green', marker='.', label='sweep dedicated model #1')
+    parser = argparse.ArgumentParser()
+    parser.prog = 'Spectrum Anomaly Detection'
+    parser.description = 'getting eval per data type'
+    parser.add_argument('-r', '--root-path', help='root folder of data\'s models')
 
-d = load_object(os.path.join(cep_path, 'sweep', 'roc_score_'+score_name+'.pkl'))
-plt.plot(d['dBs'], d['aucs'], color='green', marker='.', label='sweep dedicated model #2')
+    namespace = parser.parse_args(sys_args)
 
-for i,score_name in enumerate(special_scores):
-    d = load_object(os.path.join(comp_gauss_path, 'sweep', 'roc_score_' + score_name + '.pkl'))
-    plt.plot(d['dBs'], d['aucs'], color='blue', marker=mark_style[i], label='"complex gaussian" model, score method - '+score_name)
+    root_path = namespace.root_path
 
-for i,score_name in enumerate(special_scores):
-    d = load_object(os.path.join(amir_path, 'sweep', 'roc_score_' + score_name + '.pkl'))
-    plt.plot(d['dBs'], d['aucs'], color='red', marker=mark_style[i], label='"log_power gaussian" model, score method - ' + score_name)
+    general_models = ['ae', 'amir', 'complex_gauss']
 
-plt.title('sweep', fontsize=20)
-plt.ylim([0,1])
-plt.xlabel('ISR in dB of anomaly', fontsize=18)
-plt.ylabel('AUC score', fontsize=18)
-plt.legend()
-plt.gca().grid(True)
-f.set_size_inches(8, 6.5, forward=True)
+    cep_path = os.path.join('cepstrum_125000', 'eval', 'ROC')
+    gauss_cep_path = os.path.join('gaussian_cepstrum_125000', 'eval', 'ROC')
+    cep_2d_path = os.path.join('cepstrum_2dfft_125000', 'eval', 'ROC')
 
-fig_path = os.path.join('model', '0_eval_all_models', 'sweep_dB_vs_auc')
-save_fig(f, fig_path)
+    sweep_special_models = ['cepstrum', 'gaussian_cepstrum', 'cepstrum_2dfft']
 
-plt.close()
+    CW_special_models = ['CW_dedicated']
 
-## CW
-f = plt.figure()
-score_name = 'CW_dedicated'
-d = load_object(os.path.join(comp_gauss_path, 'CW', 'roc_score_'+score_name+'.pkl'))
-plt.plot(d['dBs'], d['aucs'], color='green', marker='.', label='CW dedicated model #1')
+    plot_all_roc(root_path, general_models, sweep_special_models, 'sweep')
 
-d = load_object(os.path.join(amir_path, 'CW', 'roc_score_'+score_name+'.pkl'))
-plt.plot(d['dBs'], d['aucs'], color='green', marker='.', label='CW dedicated model #2')
+    plot_all_roc(root_path, general_models, CW_special_models, 'CW')
 
-for i,score_name in enumerate(special_scores):
-    d = load_object(os.path.join(comp_gauss_path, 'CW', 'roc_score_' + score_name + '.pkl'))
-    plt.plot(d['dBs'], d['aucs'], color='blue', marker=mark_style[i], label='"complex gaussian" model, score method - ' + score_name)
-
-for i,score_name in enumerate(special_scores):
-    d = load_object(os.path.join(amir_path, 'CW', 'roc_score_' + score_name + '.pkl'))
-    plt.plot(d['dBs'], d['aucs'], color='red', marker=mark_style[i], label='"log_power gaussian" model, score method - ' + score_name)
-
-plt.title('CW', fontsize=20)
-plt.ylim([0,1])
-plt.xlabel('ISR in dB of anomaly', fontsize=18)
-plt.ylabel('AUC score', fontsize=18)
-plt.legend()
-plt.gca().grid(True)
-f.set_size_inches(8, 6.5, forward=True)
-
-fig_path = os.path.join('model', '0_eval_all_models', 'CW_dB_vs_auc')
-save_fig(f, fig_path)
+if __name__ == '__main__':
+    main(sys.argv[1:])

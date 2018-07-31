@@ -23,7 +23,8 @@
     },
     "cepstrum":
     {
-      "window_size": 512
+      "window_size": 512,
+      "rbw": 125e3
     },
     "gmm":
     {
@@ -52,7 +53,7 @@
     "ae":
     {
       "models_dir": "model/ae",
-      "num_epochs":3,
+      "num_epochs":20 ,
       "batch_size":32,
       "lr":0.001,
       "validation_split":0.2,

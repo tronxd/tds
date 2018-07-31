@@ -18,11 +18,14 @@ def get_classes():
     from base_model.cepstrum_model import CepstrumModel
     from base_model.gaussian_cepstrum_model import GaussianCepstrum
     from base_model.cepstrum_2dfft import Cepstrum2DFFT
+    from base_model.amir_CW_dedicated import CWDedicated
 
     d = {'ae': AeModel,
          'amir': AmirModel,
          'complex_gauss': ComplexGauss,
          'cepstrum': CepstrumModel,
          'gaussian_cepstrum': GaussianCepstrum,
-         'cepstrum_2dfft':Cepstrum2DFFT}
+         'cepstrum_2dfft':Cepstrum2DFFT,
+         'CW_dedicated': CWDedicated}
     return d
+

@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import os
-from base_model.cepstrum_model import CepstrumModel
 from base_model.amir_model import AmirModel
 from utilities.preprocessing import  iq2fft, scale_train_vectors, whiten_train_data, get_config, reshape_to_blocks, \
     add_noise, persist_val_stat, load_object, whiten_test_data, scale_test_vectors, \
@@ -28,27 +27,19 @@ cepstrum_window_size = conf['preprocessing']['cepstrum']['window_size']
 basic_block_interval = conf['preprocessing']['basic_time']
 
 
-class GaussianCepstrum(CepstrumModel):
-    def __init__(self, *args, **kwargs):
-        super(GaussianCepstrum,self).__init__(*args, name='gaussian_cepstrum', **kwargs)
-        self.amir_model = AmirModel(model_path=os.path.join(self.model_path,'amir'))
+class CWDedicated(AmirModel):
+    def __init__(self, *args,**kwargs):
+        super(CWDedicated,self).__init__(name='cw_dedicated', **kwargs)
 
-    # Preprocess raw data and persist scalers
-    # Returns the preprocessed data
-    def preprocess_train_data(self, iq_data, sample_rate):
-        (time, fft_train) = self.amir_model.preprocess_train_data(iq_data,sample_rate,rbw=self.rbw)
-        self.amir_model.train_data(fft_train)
+    def predict_basic_block_score(self, iq_data_basic_block, sample_rate):
+        ## get only basic_block_len
+        basic_len = get_basic_block_len(sample_rate, basic_time)
+        if basic_len != iq_data_basic_block.shape[0]:
+            raise("iq_data too long...")
+        pred_time, pred_matrix = self.predict_basic_block(iq_data_basic_block, sample_rate)
 
-        return (time,fft_train)
+        score = np.max(np.mean(pred_matrix, axis=0))
+        return score
 
-    # Preprocess raw data from loaded scalers
-    # Returns the preprocessed data
-    def preprocess_test_data(self, iq_data,sample_rate):
-        (time, fft_test) = self.amir_model.preprocess_test_data(iq_data,sample_rate,rbw=self.rbw)
-        # scaling spectrogram
-        if use_scaling:
-            fft_test = scale_test_vectors(fft_test, self.scaler_path)
-        # getting spectrogram
-
-        return (time, fft_test)
-
+    def get_score_methods(self):
+        return {'normal': self.predict_basic_block_score}

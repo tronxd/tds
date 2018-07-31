@@ -30,8 +30,8 @@ basic_block_interval = conf['preprocessing']['basic_time']
 
 
 class Cepstrum2DFFT(CepstrumModel):
-    def __init__(self):
-        super(Cepstrum2DFFT,self).__init__(name='cepstrum_2dfft')
+    def __init__(self, *args, **kwargs):
+        super(Cepstrum2DFFT,self).__init__(*args, name='cepstrum_2dfft', **kwargs)
         self.amir_model = AmirModel(model_path=os.path.join(self.model_path,'amir'))
 
 

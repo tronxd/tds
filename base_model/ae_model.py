@@ -39,16 +39,21 @@ loss_fn = 'mse'
 
 
 class AeModel(BaseNetModel):
-    def __init__(self, model_path=None):
+    def __init__(self, *args,**kwargs):
         super(AeModel, self).__init__(train_params, gpus)
         self.rbw = rbw
         self.name = 'ae'
-        if not model_path:
-            self.model_path = os.path.join('model',self.name+'_' + str(int(self.rbw))+'_block_{}X{}'.format(block_shape[0], block_shape[1]))
+        if 'model_path' in kwargs:
+            self.model_path = kwargs.pop('model_path')
         else:
-            self.model_path = model_path
+            if 'model_root' in kwargs:
+                model_root = kwargs.pop('model_root')
+            else:
+                model_root = 'model'
+            self.model_path = os.path.join(model_root,self.name+'_' + str(int(self.rbw))+'_block_{}X{}'.format(block_shape[0], block_shape[1]))
+
         if not os.path.exists(self.model_path):
-            os.mkdir(self.model_path)
+            os.makedirs(self.model_path)
 
         self.loaded = False
         self.whiten_path = None

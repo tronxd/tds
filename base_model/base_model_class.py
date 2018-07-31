@@ -35,6 +35,9 @@ class BaseModel(object):
         # call predict_basic_block and does voting
         raise NotImplementedError()
 
+    def get_score_methods(self):
+        return {'normal': self.predict_basic_block_score}
+
     # call predict_basic_block and plots it nicely
     def plot_prediction(self, iq_data_basic_block,sample_rate):
 

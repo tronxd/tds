@@ -37,7 +37,11 @@ class  CepstrumModel(BaseModel):
         if 'model_path' in kwargs:
             self.model_path = kwargs.pop('model_path')
         else:
-            self.model_path = os.path.join('model',self.name + '_' + str(int(self.rbw)))
+            if 'model_root' in kwargs:
+                model_root = kwargs.pop('model_root')
+            else:
+                model_root = 'model'
+            self.model_path = os.path.join(model_root, self.name + '_' + str(int(self.rbw)))
 
         if not os.path.exists(self.model_path):
             os.makedirs(self.model_path)
