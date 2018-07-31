@@ -162,8 +162,7 @@ class ComplexGauss(BaseModel):
         return score
 
     def get_score_methods(self):
-        dic = {'normal': self.predict_basic_block_score,
-               'mean': self.predict_basic_block_score_mean,
+        dic = {'mean': self.predict_basic_block_score_mean,
                'max_per_time': self.predict_basic_block_score_max,
                'percent': self.predict_basic_block_score_percent}
         return dic

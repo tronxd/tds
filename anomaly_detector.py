@@ -50,7 +50,7 @@ def main(sys_args):
     # In[5]:
 
     data_dir = namespace.data_dir
-    model_root = os.path.join('eval',path2list(data_dir)[1])
+    model_root = os.path.join('eval',path2list(data_dir)[1]) #TODO change 'eval' to somthing
     model_path = namespace.weights_path
     mode = namespace.mode
 

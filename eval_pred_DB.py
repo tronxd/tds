@@ -130,7 +130,7 @@ def main(sys_args):
     namespace = parser.parse_args(sys_args)
 
     normal_path = namespace.data
-    model_root = os.path.join('eval',path2list(normal_path)[1])
+    model_root = os.path.join('eval',path2list(normal_path)[1]) #TODO change 'eval' to somthing
 
     ModelClass = ModelClass_dic[namespace.model]
     model = ModelClass(model_root=model_root)

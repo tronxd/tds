@@ -48,7 +48,7 @@ class AmirModel(BaseModel):
                 model_root = kwargs.pop('model_root')
             else:
                 model_root = 'model'
-            self.model_path = os.path.join(model_root,self.name + '_' + str(int(self.rbw)))
+            self.model_path = os.path.join(model_root, self.name + '_' + str(int(self.rbw)))
 
 
         if not os.path.exists(self.model_path):
