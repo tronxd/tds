@@ -38,7 +38,7 @@ plotly==2.2.3
 pluggy==0.6.0
 prompt-toolkit==1.0.15
 protobuf==3.5.1
-py==1.5.2
+py==1.10.0
 pyemd==0.5.1
 Pygments==2.2.0
 pyparsing==2.2.0
