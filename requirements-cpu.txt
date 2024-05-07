@@ -1,5 +1,5 @@
 Keras==2.1.2
 pyemd
-tensorflow==1.15.2
+tensorflow==2.11.1
 matplotlib
 scikit-learn
