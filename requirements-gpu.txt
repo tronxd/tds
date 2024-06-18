@@ -60,7 +60,7 @@ tensorflow-tensorboard==0.4.0rc3
 testpath==0.3.1
 tornado==6.3.3
 traitlets==4.3.2
-urllib3==1.26.18
+urllib3==1.26.19
 wcwidth==0.1.7
 Werkzeug==3.0.3
 widgetsnbextension==3.0.8
