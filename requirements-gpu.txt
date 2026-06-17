@@ -62,6 +62,6 @@ tornado==6.4.1
 traitlets==4.3.2
 urllib3==1.26.19
 wcwidth==0.1.7
-Werkzeug==3.0.3
+Werkzeug==3.1.6
 widgetsnbextension==3.0.8
 wincertstore==0.2
